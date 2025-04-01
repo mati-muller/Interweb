@@ -5,6 +5,7 @@ import './index.css';
 import App from './App';
 import Login from './login'; // Importa el componente Login
 import Home from './home'; // Import the Home component
+import Encol from './encol'; // Import the Encol component
 import reportWebVitals from './reportWebVitals';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -26,6 +27,14 @@ root.render(
           element={
             <ProtectedRoute>
               <Home />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/encol"
+          element={
+            <ProtectedRoute>
+              <Encol />
             </ProtectedRoute>
           }
         />
