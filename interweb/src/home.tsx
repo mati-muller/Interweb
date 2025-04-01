@@ -64,6 +64,7 @@ const styles: { [key: string]: React.CSSProperties } = {
         top: '50%',
         left: '50%',
         transform: 'translate(-50%, -50%)',
+        zIndex: 0, // Ensure watermark is behind other elements
     },
     title: {
         fontSize: '24px',
@@ -90,6 +91,8 @@ const styles: { [key: string]: React.CSSProperties } = {
         border: 'none',
         cursor: 'pointer',
         textAlign: 'center' as React.CSSProperties['textAlign'], // Explicitly cast textAlign
+        zIndex: 1, // Ensure buttons are above the watermark
+        position: 'relative', // Required for zIndex to take effect
     },
     logoutButton: {
         backgroundColor: '#c8a165',

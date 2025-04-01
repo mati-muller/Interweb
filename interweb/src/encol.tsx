@@ -118,31 +118,30 @@ export default function Encol() {
             <button
                 style={{
                     marginBottom: '10px',
-                    padding: '10px',
+                    padding: '15px 20px', // Increased padding for a larger button
                     backgroundColor: '#c8a165',
                     color: '#fff',
                     border: 'none',
                     borderRadius: '5px',
                     cursor: 'pointer',
+                    fontSize: '18px', // Larger font size
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '10px', // Space between text and arrow
                 }}
                 onClick={() => navigate('/home')}
             >
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    width="20px"
+                    height="20px"
+                >
+                    <path d="M10 19l-7-7 7-7v4h8v6h-8v4z" />
+                </svg>
                 Volver
-            </button>
-            <button
-                style={{
-                    marginBottom: '10px',
-                    marginLeft: '10px',
-                    padding: '10px',
-                    backgroundColor: '#4caf50',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '5px',
-                    cursor: 'pointer',
-                }}
-                onClick={handleSubmitSelected}
-            >
-                Submit Selected
             </button>
             <input
                 type="text"
@@ -150,20 +149,21 @@ export default function Encol() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 style={{
-                    marginBottom: '10px',
+                    marginBottom: '20px',
                     padding: '10px',
                     width: '100%',
                     border: '1px solid #ccc',
                     borderRadius: '5px',
+                    fontSize: '16px',
                 }}
             />
             {selectedItems.length > 0 && (
-                <div style={{ marginBottom: '20px', padding: '10px', border: '1px solid #ddd', borderRadius: '5px' }}>
-                    <h3>Selected Items</h3>
+                <div style={{ marginBottom: '20px', padding: '15px', border: '1px solid #ddd', borderRadius: '5px', backgroundColor: '#f9f9f9' }}>
+                    <h3 style={{ marginBottom: '15px', color: '#333' }}>Elementos Seleccionados</h3>
                     <ul style={{ listStyleType: 'none', padding: 0 }}>
                         {selectedItems.map((item, index) => (
-                            <li key={item.ID} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-                                <span style={{ flex: 1 }}>
+                            <li key={item.ID} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px', backgroundColor: '#fff', padding: '10px', borderRadius: '5px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}>
+                                <span style={{ flex: 1, fontSize: '14px' }}>
                                     <strong>Producto:</strong> {item.DETPROD} | <strong>Cliente:</strong> {item.NOMAUX} | <strong>Cantidad:</strong> {item.CANT_A_FABRICAR}
                                 </span>
                                 <button
@@ -204,14 +204,41 @@ export default function Encol() {
                                         border: 'none',
                                         borderRadius: '5px',
                                         cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
                                     }}
                                     onClick={() => setSelectedItems((prev) => prev.filter((_, i) => i !== index))}
                                 >
-                                    🗑️
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 24 24"
+                                        fill="currentColor"
+                                        width="16px"
+                                        height="16px"
+                                    >
+                                        <path d="M3 6h18v2H3V6zm2 3h14v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V9zm5 2v8h2v-8H8zm4 0v8h2v-8h-2zM9 4h6v2H9V4z" />
+                                    </svg>
                                 </button>
                             </li>
                         ))}
                     </ul>
+                    <button
+                        style={{
+                            marginTop: '15px',
+                            padding: '10px',
+                            backgroundColor: '#c8a165', // Updated color
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '5px',
+                            cursor: 'pointer',
+                            width: '100%',
+                            fontSize: '16px',
+                        }}
+                        onClick={handleSubmitSelected}
+                    >
+                        Subir Seleccionados
+                    </button>
                 </div>
             )}
             {loading ? (
@@ -225,7 +252,7 @@ export default function Encol() {
                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                         <thead>
                             <tr style={{ backgroundColor: '#c8a165', color: '#fff' }}>
-                                <th style={{ padding: '10px', border: '1px solid #ddd' }}>Prioridad</th>
+                                <th style={{ padding: '10px', border: '1px solid #ddd' }}>Seleccionar</th>
                                 <th style={{ padding: '10px', border: '1px solid #ddd' }}>Nota de venta</th>
                                 <th style={{ padding: '10px', border: '1px solid #ddd' }}>Cliente</th>
                                 <th style={{ padding: '10px', border: '1px solid #ddd' }}>Fecha Entrega</th>
@@ -309,7 +336,7 @@ export default function Encol() {
                             onClick={handleAddToSelected}
                             style={{
                                 padding: '10px',
-                                backgroundColor: '#4caf50',
+                                backgroundColor: '#c8a165',
                                 color: '#fff',
                                 border: 'none',
                                 borderRadius: '5px',
@@ -317,7 +344,7 @@ export default function Encol() {
                                 marginRight: '10px',
                             }}
                         >
-                            Add to List
+                            Añadir
                         </button>
                         <button
                             onClick={() => setShowModal(false)}
@@ -330,7 +357,7 @@ export default function Encol() {
                                 cursor: 'pointer',
                             }}
                         >
-                            Cancel
+                            Cancelar
                         </button>
                     </div>
                 </div>
