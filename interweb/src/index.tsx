@@ -7,7 +7,7 @@ import Login from './login'; // Importa el componente Login
 import Home from './home'; // Import the Home component
 import Encol from './encol'; // Import the Encol component
 import reportWebVitals from './reportWebVitals';
-
+import Troquel from './troquel';
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const user = localStorage.getItem('user'); // Ensure this checks for 'user'
   return user ? <>{children}</> : <Navigate to="/login" />;
@@ -35,6 +35,14 @@ root.render(
           element={
             <ProtectedRoute>
               <Encol />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/troquel"
+          element={
+            <ProtectedRoute>
+              <Troquel />
             </ProtectedRoute>
           }
         />
