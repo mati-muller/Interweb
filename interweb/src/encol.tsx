@@ -164,7 +164,7 @@ export default function Encol() {
                         {selectedItems.map((item, index) => (
                             <li key={item.ID} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
                                 <span style={{ flex: 1 }}>
-                                    <strong>Producto:</strong> {item.DETPROD} | <strong>Cantidad:</strong> {item.CANT_A_FABRICAR}
+                                    <strong>Producto:</strong> {item.DETPROD} | <strong>Cliente:</strong> {item.NOMAUX} | <strong>Cantidad:</strong> {item.CANT_A_FABRICAR}
                                 </span>
                                 <button
                                     style={{
@@ -183,6 +183,7 @@ export default function Encol() {
                                 </button>
                                 <button
                                     style={{
+                                        marginRight: '5px',
                                         padding: '5px 10px',
                                         backgroundColor: '#4caf50',
                                         color: '#fff',
@@ -194,6 +195,19 @@ export default function Encol() {
                                     disabled={index === selectedItems.length - 1}
                                 >
                                     ↓
+                                </button>
+                                <button
+                                    style={{
+                                        padding: '5px 10px',
+                                        backgroundColor: '#ff4c4c',
+                                        color: '#fff',
+                                        border: 'none',
+                                        borderRadius: '5px',
+                                        cursor: 'pointer',
+                                    }}
+                                    onClick={() => setSelectedItems((prev) => prev.filter((_, i) => i !== index))}
+                                >
+                                    🗑️
                                 </button>
                             </li>
                         ))}
