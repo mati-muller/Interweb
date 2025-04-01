@@ -1,19 +1,37 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import './index.css';
 import App from './App';
+import Login from './login'; // Importa el componente Login
+import Home from './home'; // Import the Home component
 import reportWebVitals from './reportWebVitals';
+
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const user = localStorage.getItem('user'); // Ensure this checks for 'user'
+  return user ? <>{children}</> : <Navigate to="/login" />;
+};
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
 root.render(
   <React.StrictMode>
-    <App />
+    <Router>
+      <Routes>
+        <Route path="/" element={<App />} />
+        <Route path="/login" element={<Login />} />
+        <Route
+          path="/home"
+          element={
+            <ProtectedRoute>
+              <Home />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </Router>
   </React.StrictMode>
 );
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
 reportWebVitals();
