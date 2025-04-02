@@ -29,7 +29,7 @@ const Login: React.FC = () => {
   return (
     <div style={styles.container}>
       <div style={styles.form}>
-        <img src="/interlogo.png" alt="Logo" style={styles.logo} />
+        <img src="/interpanellogo.webp" alt="Logo" style={styles.logo} />
         <h1 style={styles.title}>Iniciar Sesión</h1>
         <label style={styles.label}>Usuario:</label>
         <input

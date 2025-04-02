@@ -19,7 +19,7 @@ export default function Home() {
     return (
         <div style={styles.container}>
             <img
-                src="/interlogo.png"
+                src="/interchico.webp"
                 alt="Watermark"
                 style={styles.watermark}
             />
@@ -60,7 +60,7 @@ const styles: { [key: string]: React.CSSProperties } = {
         position: 'absolute',
         width: '350px', // Increased from 250px to 350px
         height: '350px', // Increased from 250px to 350px
-        opacity: 0.1,
+        opacity: 0.2,
         top: '50%',
         left: '50%',
         transform: 'translate(-50%, -50%)',
