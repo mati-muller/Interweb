@@ -20,6 +20,7 @@ interface DataItem {
 export default function Troquel() {
     const navigate = useNavigate();
     const [data, setData] = useState<DataItem[]>([]);
+    const [originalData, setOriginalData] = useState<DataItem[]>([]); // Store original data
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [showModal, setShowModal] = useState(false);
@@ -35,6 +36,7 @@ export default function Troquel() {
             .then((response) => {
                 if (Array.isArray(response.data)) {
                     setData(response.data);
+                    setOriginalData(response.data); // Save original data
                 } else {
                     setError('Unexpected API response format.');
                 }
@@ -67,7 +69,16 @@ export default function Troquel() {
     const handleRemoveFromSelected = (index: number) => {
         setSelectedItems((prev) => {
             const removedItem = prev[index];
-            setData((prevData) => [...prevData, removedItem]); // Restore to main table
+            setData((prevData) => {
+                const updatedData = prevData.some((item) => item.ID === removedItem.ID)
+                    ? prevData // If the item already exists, do not add it again
+                    : [...prevData, removedItem];
+                return updatedData.sort((a, b) => {
+                    const originalIndexA = originalData.findIndex((item) => item.ID === a.ID);
+                    const originalIndexB = originalData.findIndex((item) => item.ID === b.ID);
+                    return originalIndexA - originalIndexB;
+                }); // Restore original order
+            });
             return prev.filter((_, i) => i !== index);
         });
     };
