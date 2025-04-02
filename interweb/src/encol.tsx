@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { config } from './set/config'; // Import config
 
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = config.apiUrl; // Use apiUrl from config
 
 interface DataItem {
     ID: number;

@@ -25,16 +25,16 @@ export default function Home() {
             />
             <h1 style={styles.title}>Menú Principal</h1>
             <div style={styles.grid}>
-                <button style={styles.button} onClick={() => navigate('/encol')}>
+                <button style={styles.button} onClick={() => navigate('/encolado')}>
                     Encolado
                 </button>
-                <button style={styles.button} onClick={() => navigate('/troz')}>
+                <button style={styles.button} onClick={() => navigate('/trozado')}>
                     Trozado
                 </button>
-                <button style={styles.button} onClick={() => navigate('/troq')}>
+                <button style={styles.button} onClick={() => navigate('/troquelado')}>
                     Troquelado
                 </button>
-                <button style={styles.button} onClick={() => navigate('/pega')}>
+                <button style={styles.button} onClick={() => navigate('/pegado')}>
                     Pegado
                 </button>
             </div>

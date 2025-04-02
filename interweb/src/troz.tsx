@@ -17,7 +17,7 @@ interface DataItem {
     CANT_A_FABRICAR?: number;
 }
 
-export default function Troquel() {
+export default function Troz() {
     const navigate = useNavigate();
     const [data, setData] = useState<DataItem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -29,7 +29,7 @@ export default function Troquel() {
     const [searchQuery, setSearchQuery] = useState(''); // State for search query
 
     const fetchData = () => {
-        const apiUrl = `${API_BASE_URL}/procesos/pendientes-troquel`;
+        const apiUrl = `${API_BASE_URL}/procesos/pendientes-troza`;
         setLoading(true);
         axios.get<DataItem[]>(apiUrl)
             .then((response) => {
@@ -74,7 +74,7 @@ export default function Troquel() {
             CANT_A_FABRICAR: item.CANT_A_FABRICAR,
         }));
 
-        axios.post(`${API_BASE_URL}/app/update-trquelado`, { items: payload }, {
+        axios.post(`${API_BASE_URL}/app/update-trozado`, { items: payload }, {
             headers: { 'Content-Type': 'application/json' }
         })
             .then(() => {

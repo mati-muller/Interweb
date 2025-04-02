@@ -8,6 +8,8 @@ import Home from './home'; // Import the Home component
 import Encol from './encol'; // Import the Encol component
 import reportWebVitals from './reportWebVitals';
 import Troquel from './troquel';
+import Troza from './troz'; // Import the Troza component
+
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const user = localStorage.getItem('user'); // Ensure this checks for 'user'
   return user ? <>{children}</> : <Navigate to="/login" />;
@@ -31,7 +33,7 @@ root.render(
           }
         />
         <Route
-          path="/encol"
+          path="/encolado"
           element={
             <ProtectedRoute>
               <Encol />
@@ -39,10 +41,18 @@ root.render(
           }
         />
         <Route
-          path="/troquel"
+          path="/troquelado"
           element={
             <ProtectedRoute>
               <Troquel />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/trozado"
+          element={
+            <ProtectedRoute>
+              <Troza />
             </ProtectedRoute>
           }
         />
