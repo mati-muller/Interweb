@@ -58,9 +58,18 @@ export default function Troz() {
                 CANT_A_FABRICAR: parseInt(desiredQuantity, 10),
             };
             setSelectedItems((prev) => [...prev, updatedItem]);
+            setData((prev) => prev.filter((item) => item.ID !== selectedItem.ID)); // Remove from main table
             setShowModal(false);
             setDesiredQuantity('');
         }
+    };
+
+    const handleRemoveFromSelected = (index: number) => {
+        setSelectedItems((prev) => {
+            const removedItem = prev[index];
+            setData((prevData) => [...prevData, removedItem]); // Restore to main table
+            return prev.filter((_, i) => i !== index);
+        });
     };
 
     const handleSubmitSelected = () => {
@@ -209,7 +218,7 @@ export default function Troz() {
                                         alignItems: 'center',
                                         justifyContent: 'center',
                                     }}
-                                    onClick={() => setSelectedItems((prev) => prev.filter((_, i) => i !== index))}
+                                    onClick={() => handleRemoveFromSelected(index)} // Update handler
                                 >
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"
