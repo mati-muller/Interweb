@@ -1,3 +1,3 @@
 export const config = {
-    apiUrl: 'http://localhost:3000', // Base API URL
+    apiUrl: process.env.API_URL || 'http://localhost:3000', // Base API URL
 };

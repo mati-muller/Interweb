@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { config } from './set/config'; // Import config
+import { config } from '../set/config'; // Import config
 
 const API_BASE_URL = config.apiUrl; // Use apiUrl from config
 
@@ -17,7 +17,7 @@ interface DataItem {
     CANT_A_FABRICAR?: number;
 }
 
-export default function Troz() {
+export default function Troquel() {
     const navigate = useNavigate();
     const [data, setData] = useState<DataItem[]>([]);
     const [originalData, setOriginalData] = useState<DataItem[]>([]); // Store original data
@@ -30,7 +30,7 @@ export default function Troz() {
     const [searchQuery, setSearchQuery] = useState(''); // State for search query
 
     const fetchData = () => {
-        const apiUrl = `${API_BASE_URL}/procesos/pendientes-troza`;
+        const apiUrl = `${API_BASE_URL}/procesos/pendientes-troquel`;
         setLoading(true);
         axios.get<DataItem[]>(apiUrl)
             .then((response) => {
@@ -94,7 +94,7 @@ export default function Troz() {
             CANT_A_FABRICAR: item.CANT_A_FABRICAR,
         }));
 
-        axios.post(`${API_BASE_URL}/app/update-trozado`, { items: payload }, {
+        axios.post(`${API_BASE_URL}/app/update-trquelado`, { items: payload }, {
             headers: { 'Content-Type': 'application/json' }
         })
             .then(() => {
@@ -229,7 +229,7 @@ export default function Troz() {
                                         alignItems: 'center',
                                         justifyContent: 'center',
                                     }}
-                                    onClick={() => handleRemoveFromSelected(index)} // Update handler
+                                    onClick={() => handleRemoveFromSelected(index)}
                                 >
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"

@@ -25,17 +25,14 @@ export default function Home() {
             />
             <h1 style={styles.title}>Menú Principal</h1>
             <div style={styles.grid}>
-                <button style={styles.button} onClick={() => navigate('/encolado')}>
-                    Encolado
+                <button style={styles.button} onClick={() => navigate('/inventario')}>
+                    Ir a módulo de inventario
                 </button>
-                <button style={styles.button} onClick={() => navigate('/trozado')}>
-                    Trozado
+                <button style={styles.button} onClick={() => navigate('/programa-produccion')}>
+                    Ir a módulo de programa de producción
                 </button>
-                <button style={styles.button} onClick={() => navigate('/troquelado')}>
-                    Troquelado
-                </button>
-                <button style={styles.button} onClick={() => navigate('/pegado')}>
-                    Pegado
+                <button style={styles.button} onClick={() => navigate('/gestion-usuarios')}>
+                    Ir a módulo de gestión de usuarios
                 </button>
             </div>
             <button style={{ ...styles.button, ...styles.logoutButton }} onClick={handleLogout}>
@@ -58,13 +55,13 @@ const styles: { [key: string]: React.CSSProperties } = {
     },
     watermark: {
         position: 'absolute',
-        width: '350px', // Increased from 250px to 350px
-        height: '350px', // Increased from 250px to 350px
+        width: '350px',
+        height: '350px',
         opacity: 0.2,
         top: '50%',
         left: '50%',
         transform: 'translate(-50%, -50%)',
-        zIndex: 0, // Ensure watermark is behind other elements
+        zIndex: 0,
     },
     title: {
         fontSize: '24px',
@@ -90,9 +87,9 @@ const styles: { [key: string]: React.CSSProperties } = {
         fontWeight: 'bold',
         border: 'none',
         cursor: 'pointer',
-        textAlign: 'center' as React.CSSProperties['textAlign'], // Explicitly cast textAlign
-        zIndex: 1, // Ensure buttons are above the watermark
-        position: 'relative', // Required for zIndex to take effect
+        textAlign: 'center' as React.CSSProperties['textAlign'],
+        zIndex: 1,
+        position: 'relative',
     },
     logoutButton: {
         backgroundColor: '#c8a165',

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { config } from './set/config'; // Import the config file
+import { config } from '../set/config'; // Import the config file
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
 const Login: React.FC = () => {

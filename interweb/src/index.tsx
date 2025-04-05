@@ -2,12 +2,13 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import './index.css';
-import Login from './login'; // Importa el componente Login
-import Home from './home'; // Import the Home component
-import Encol from './encol'; // Import the Encol component
+import Login from './home/login'; // Importa el componente Login
+import Homeprocesos from './home/homeprocesos'; // Import the Home component
+import Encol from './procesos/encol'; // Import the Encol component
 import reportWebVitals from './reportWebVitals';
-import Troquel from './troquel';
-import Troza from './troz'; // Import the Troza component
+import Troquel from './procesos/troquel';
+import Troza from './procesos/troz'; // Import the Troza component
+import Home from './home/home';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const user = localStorage.getItem('user'); // Ensure this checks for 'user'
@@ -28,6 +29,14 @@ root.render(
           element={
             <ProtectedRoute>
               <Home />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/programa-produccion"
+          element={
+            <ProtectedRoute>
+              <Homeprocesos />
             </ProtectedRoute>
           }
         />
