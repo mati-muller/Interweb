@@ -28,6 +28,8 @@ export default function Encol() {
     const [desiredQuantity, setDesiredQuantity] = useState('');
     const [selectedItems, setSelectedItems] = useState<DataItem[]>([]);
     const [searchQuery, setSearchQuery] = useState(''); // State for search query
+    const [placasFields, setPlacasFields] = useState<string[]>(['']); // Dynamic fields for Placas
+    const [placasUsadasFields, setPlacasUsadasFields] = useState<string[]>(['']); // Dynamic fields for Placas Usadas
 
     const fetchData = () => {
         const apiUrl = `${API_BASE_URL}/procesos/pendientes-encol`;
@@ -124,6 +126,23 @@ export default function Encol() {
             [updated[index], updated[index + 1]] = [updated[index + 1], updated[index]];
             return updated;
         });
+    };
+
+    const addPlacaField = () => {
+        setPlacasFields([...placasFields, '']);
+        setPlacasUsadasFields([...placasUsadasFields, '']);
+    };
+
+    const updatePlacaField = (index: number, value: string) => {
+        const updatedPlacas = [...placasFields];
+        updatedPlacas[index] = value;
+        setPlacasFields(updatedPlacas);
+    };
+
+    const updatePlacaUsadaField = (index: number, value: string) => {
+        const updatedPlacasUsadas = [...placasUsadasFields];
+        updatedPlacasUsadas[index] = value;
+        setPlacasUsadasFields(updatedPlacasUsadas);
     };
 
     useEffect(() => {
@@ -353,6 +372,56 @@ export default function Encol() {
                                 borderRadius: '5px',
                             }}
                         />
+                        {placasFields.map((placa, index) => (
+                            <div key={`placa-group-${index}`}>
+                                <p>
+                                    <strong>Tipo Placa {index + 1}:</strong>
+                                </p>
+                                <input
+                                    type="text"
+                                    placeholder={`Tipo Placa ${index + 1}`}
+                                    value={placa}
+                                    onChange={(e) => updatePlacaField(index, e.target.value)}
+                                    style={{
+                                        width: '100%',
+                                        padding: '10px',
+                                        marginBottom: '10px',
+                                        border: '1px solid #ccc',
+                                        borderRadius: '5px',
+                                    }}
+                                />
+                                <p>
+                                    <strong>Placas Usadas {index + 1}:</strong>
+                                </p>
+                                <input
+                                    type="number"
+                                    placeholder={`Placas Usadas ${index + 1}`}
+                                    value={placasUsadasFields[index]}
+                                    onChange={(e) => updatePlacaUsadaField(index, e.target.value)}
+                                    style={{
+                                        width: '100%',
+                                        padding: '10px',
+                                        marginBottom: '10px',
+                                        border: '1px solid #ccc',
+                                        borderRadius: '5px',
+                                    }}
+                                />
+                            </div>
+                        ))}
+                        <button
+                            onClick={addPlacaField}
+                            style={{
+                                padding: '10px',
+                                backgroundColor: '#228B22',
+                                color: '#fff',
+                                border: 'none',
+                                borderRadius: '5px',
+                                cursor: 'pointer',
+                                marginBottom: '10px',
+                            }}
+                        >
+                            Agregar Placa
+                        </button>
                         <button
                             onClick={handleAddToSelected}
                             style={{
