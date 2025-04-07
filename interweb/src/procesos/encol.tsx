@@ -15,6 +15,8 @@ interface DataItem {
     CANTPROD: number;
     CANT_A_PROD: number;
     CANT_A_FABRICAR?: number;
+    transformedPlacas?: string[]; // Add transformedPlacas property
+    placasUsadas?: number[]; // Add placasUsadas property
 }
 
 export default function Encol() {
@@ -52,14 +54,21 @@ export default function Encol() {
 
     const handleCheckboxClick = (item: DataItem) => {
         setSelectedItem(item);
+        setDesiredQuantity(''); // Reset desired quantity
+        setPlacasFields(['']); // Reset placas fields
+        setPlacasUsadasFields(['']); // Reset placas usadas fields
         setShowModal(true);
     };
 
     const handleAddToSelected = () => {
         if (selectedItem && desiredQuantity) {
+            const transformedPlacas = placasFields.map((placa) => placa.toUpperCase().replace(/\s+/g, '')); // Transform placas
+            const placasUsadas = placasUsadasFields.map(Number); // Convert placasUsadasFields to numbers
             const updatedItem = {
                 ...selectedItem,
                 CANT_A_FABRICAR: parseInt(desiredQuantity, 10),
+                transformedPlacas, // Include transformedPlacas in the item
+                placasUsadas, // Include placasUsadas in the item
             };
             setSelectedItems((prev) => [...prev, updatedItem]);
             setData((prev) => prev.filter((item) => item.ID !== selectedItem.ID)); // Remove from main table
@@ -94,7 +103,10 @@ export default function Encol() {
         const payload = selectedItems.map((item) => ({
             ID: item.ID,
             CANT_A_FABRICAR: item.CANT_A_FABRICAR,
+            transformedPlacas: item.transformedPlacas || [], // Include transformedPlacas
+            placasUsadas: item.placasUsadas || [], // Include placasUsadas
         }));
+        console.log('Submitting selected items:', payload); // Log the payload for debugging
 
         axios.post(`${API_BASE_URL}/app/update-encolado`, { items: payload }, {
             headers: { 'Content-Type': 'application/json' }
@@ -333,6 +345,7 @@ export default function Encol() {
                     </table>
                 </div>
             )}
+            { /* Modal for selecting item details */ }
             {showModal && selectedItem && (
                 <div
                     style={{
@@ -345,18 +358,21 @@ export default function Encol() {
                         display: 'flex',
                         justifyContent: 'center',
                         alignItems: 'center',
+                        zIndex: 1000,
                     }}
                 >
                     <div
                         style={{
                             backgroundColor: '#fff',
-                            padding: '20px',
-                            borderRadius: '5px',
-                            width: '300px',
+                            padding: '25px',
+                            borderRadius: '10px',
+                            width: '400px',
+                            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
                             textAlign: 'center',
                         }}
                     >
-                        <p>
+                        <h3 style={{ marginBottom: '20px', color: '#333' }}>Detalles del Producto</h3>
+                        <p style={{ marginBottom: '15px', fontSize: '16px' }}>
                             <strong>Cantidad a producir:</strong> {selectedItem.CANT_A_PROD}
                         </p>
                         <input
@@ -365,45 +381,41 @@ export default function Encol() {
                             value={desiredQuantity}
                             onChange={(e) => setDesiredQuantity(e.target.value)}
                             style={{
-                                width: '100%',
-                                padding: '10px',
-                                marginBottom: '10px',
+                                width: '90%',
+                                padding: '12px',
+                                marginBottom: '15px',
                                 border: '1px solid #ccc',
                                 borderRadius: '5px',
+                                fontSize: '16px',
                             }}
                         />
                         {placasFields.map((placa, index) => (
-                            <div key={`placa-group-${index}`}>
-                                <p>
-                                    <strong>Tipo Placa {index + 1}:</strong>
-                                </p>
+                            <div key={`placa-group-${index}`} style={{ marginBottom: '15px' }}>
                                 <input
                                     type="text"
                                     placeholder={`Tipo Placa ${index + 1}`}
                                     value={placa}
                                     onChange={(e) => updatePlacaField(index, e.target.value)}
                                     style={{
-                                        width: '100%',
-                                        padding: '10px',
+                                        width: '90%',
+                                        padding: '12px',
                                         marginBottom: '10px',
                                         border: '1px solid #ccc',
                                         borderRadius: '5px',
+                                        fontSize: '16px',
                                     }}
                                 />
-                                <p>
-                                    <strong>Placas Usadas {index + 1}:</strong>
-                                </p>
                                 <input
                                     type="number"
                                     placeholder={`Placas Usadas ${index + 1}`}
                                     value={placasUsadasFields[index]}
                                     onChange={(e) => updatePlacaUsadaField(index, e.target.value)}
                                     style={{
-                                        width: '100%',
-                                        padding: '10px',
-                                        marginBottom: '10px',
+                                        width: '90%',
+                                        padding: '12px',
                                         border: '1px solid #ccc',
                                         borderRadius: '5px',
+                                        fontSize: '16px',
                                     }}
                                 />
                             </div>
@@ -411,44 +423,68 @@ export default function Encol() {
                         <button
                             onClick={addPlacaField}
                             style={{
-                                padding: '10px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                padding: '10px 15px',
                                 backgroundColor: '#228B22',
                                 color: '#fff',
                                 border: 'none',
                                 borderRadius: '5px',
                                 cursor: 'pointer',
-                                marginBottom: '10px',
+                                fontSize: '16px',
+                                marginBottom: '15px',
                             }}
                         >
+                            <span
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    width: '20px', // Reduced width
+                                    height: '20px', // Reduced height
+                                    backgroundColor: '#fff',
+                                    color: '#228B22',
+                                    fontWeight: 'bold',
+                                    borderRadius: '50%',
+                                    marginRight: '8px',
+                                    fontSize: '14px', // Adjusted font size for smaller circle
+                                }}
+                            >
+                                +
+                            </span>
                             Agregar Placa
                         </button>
-                        <button
-                            onClick={handleAddToSelected}
-                            style={{
-                                padding: '10px',
-                                backgroundColor: '#c8a165',
-                                color: '#fff',
-                                border: 'none',
-                                borderRadius: '5px',
-                                cursor: 'pointer',
-                                marginRight: '10px',
-                            }}
-                        >
-                            Añadir
-                        </button>
-                        <button
-                            onClick={() => setShowModal(false)}
-                            style={{
-                                padding: '10px',
-                                backgroundColor: '#ff4c4c',
-                                color: '#fff',
-                                border: 'none',
-                                borderRadius: '5px',
-                                cursor: 'pointer',
-                            }}
-                        >
-                            Cancelar
-                        </button>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <button
+                                onClick={handleAddToSelected}
+                                style={{
+                                    padding: '10px 20px',
+                                    backgroundColor: '#c8a165',
+                                    color: '#fff',
+                                    border: 'none',
+                                    borderRadius: '5px',
+                                    cursor: 'pointer',
+                                    fontSize: '16px',
+                                }}
+                            >
+                                Añadir
+                            </button>
+                            <button
+                                onClick={() => setShowModal(false)}
+                                style={{
+                                    padding: '10px 20px',
+                                    backgroundColor: '#ff4c4c',
+                                    color: '#fff',
+                                    border: 'none',
+                                    borderRadius: '5px',
+                                    cursor: 'pointer',
+                                    fontSize: '16px',
+                                }}
+                            >
+                                Cancelar
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
