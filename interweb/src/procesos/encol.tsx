@@ -62,7 +62,7 @@ export default function Encol() {
 
     const handleAddToSelected = () => {
         if (selectedItem && desiredQuantity) {
-            const transformedPlacas = placasFields.map((placa) => placa.toUpperCase().replace(/\s+/g, '')); // Transform placas
+            const transformedPlacas = placasFields.map((placa) => placa.toUpperCase()); // Transform placas
             const placasUsadas = placasUsadasFields.map(Number); // Convert placasUsadasFields to numbers
             const updatedItem = {
                 ...selectedItem,
