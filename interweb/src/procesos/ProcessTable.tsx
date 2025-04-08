@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { config } from '../set/config'; // Import config
+import { config } from '../set/config';
 
-const API_BASE_URL = config.apiUrl; // Use apiUrl from config
+const API_BASE_URL = config.apiUrl;
 
 interface DataItem {
     ID: number;
@@ -15,32 +15,36 @@ interface DataItem {
     CANTPROD: number;
     CANT_A_PROD: number;
     CANT_A_FABRICAR?: number;
-    transformedPlacas?: string[]; // Add transformedPlacas property
-    placasUsadas?: number[]; // Add placasUsadas property
+    transformedPlacas?: string[];
+    placasUsadas?: number[];
 }
 
-export default function Encol() {
+interface ProcessTableProps {
+    processName: string;
+}
+
+export default function ProcessTable({ processName }: ProcessTableProps) {
     const navigate = useNavigate();
     const [data, setData] = useState<DataItem[]>([]);
-    const [originalData, setOriginalData] = useState<DataItem[]>([]); // Store original data
+    const [originalData, setOriginalData] = useState<DataItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [showModal, setShowModal] = useState(false);
     const [selectedItem, setSelectedItem] = useState<DataItem | null>(null);
     const [desiredQuantity, setDesiredQuantity] = useState('');
     const [selectedItems, setSelectedItems] = useState<DataItem[]>([]);
-    const [searchQuery, setSearchQuery] = useState(''); // State for search query
-    const [placasFields, setPlacasFields] = useState<string[]>(['']); // Dynamic fields for Placas
-    const [placasUsadasFields, setPlacasUsadasFields] = useState<string[]>(['']); // Dynamic fields for Placas Usadas
+    const [searchQuery, setSearchQuery] = useState('');
+    const [placasFields, setPlacasFields] = useState<string[]>(['']);
+    const [placasUsadasFields, setPlacasUsadasFields] = useState<string[]>(['']);
 
     const fetchData = () => {
-        const apiUrl = `${API_BASE_URL}/procesos/pendientes-encol`;
+        const apiUrl = `${API_BASE_URL}/procesos/pendientes-${processName}`;
         setLoading(true);
         axios.get<DataItem[]>(apiUrl)
             .then((response) => {
                 if (Array.isArray(response.data)) {
                     setData(response.data);
-                    setOriginalData(response.data); // Save original data
+                    setOriginalData(response.data);
                 } else {
                     setError('Unexpected API response format.');
                 }
@@ -54,24 +58,24 @@ export default function Encol() {
 
     const handleCheckboxClick = (item: DataItem) => {
         setSelectedItem(item);
-        setDesiredQuantity(''); // Reset desired quantity
-        setPlacasFields(['']); // Reset placas fields
-        setPlacasUsadasFields(['']); // Reset placas usadas fields
+        setDesiredQuantity('');
+        setPlacasFields(['']);
+        setPlacasUsadasFields(['']);
         setShowModal(true);
     };
 
     const handleAddToSelected = () => {
         if (selectedItem && desiredQuantity) {
-            const transformedPlacas = placasFields.map((placa) => placa.toUpperCase()); // Transform placas
-            const placasUsadas = placasUsadasFields.map(Number); // Convert placasUsadasFields to numbers
+            const transformedPlacas = placasFields.map((placa) => placa.toUpperCase());
+            const placasUsadas = placasUsadasFields.map(Number);
             const updatedItem = {
                 ...selectedItem,
                 CANT_A_FABRICAR: parseInt(desiredQuantity, 10),
-                transformedPlacas, // Include transformedPlacas in the item
-                placasUsadas, // Include placasUsadas in the item
+                transformedPlacas,
+                placasUsadas,
             };
             setSelectedItems((prev) => [...prev, updatedItem]);
-            setData((prev) => prev.filter((item) => item.ID !== selectedItem.ID)); // Remove from main table
+            setData((prev) => prev.filter((item) => item.ID !== selectedItem.ID));
             setShowModal(false);
             setDesiredQuantity('');
         }
@@ -82,13 +86,13 @@ export default function Encol() {
             const removedItem = prev[index];
             setData((prevData) => {
                 const updatedData = prevData.some((item) => item.ID === removedItem.ID)
-                    ? prevData // If the item already exists, do not add it again
+                    ? prevData
                     : [...prevData, removedItem];
                 return updatedData.sort((a, b) => {
                     const originalIndexA = originalData.findIndex((item) => item.ID === a.ID);
                     const originalIndexB = originalData.findIndex((item) => item.ID === b.ID);
                     return originalIndexA - originalIndexB;
-                }); // Restore original order
+                });
             });
             return prev.filter((_, i) => i !== index);
         });
@@ -103,10 +107,10 @@ export default function Encol() {
         const payload = selectedItems.map((item) => ({
             ID: item.ID,
             CANT_A_FABRICAR: item.CANT_A_FABRICAR,
-            transformedPlacas: item.transformedPlacas || [], // Include transformedPlacas
-            placasUsadas: item.placasUsadas || [], // Include placasUsadas
+            transformedPlacas: item.transformedPlacas || [],
+            placasUsadas: item.placasUsadas || [],
         }));
-        console.log('Submitting selected items:', payload); // Log the payload for debugging
+        console.log('Submitting selected items:', payload);
 
         axios.post(`${API_BASE_URL}/app/update-encolado`, { items: payload }, {
             headers: { 'Content-Type': 'application/json' }
@@ -163,24 +167,24 @@ export default function Encol() {
 
     const filteredData = data.filter((item) =>
         item.NOMAUX.toLowerCase().includes(searchQuery.toLowerCase())
-    ); // Filter data based on search query
+    );
 
     return (
         <div style={{ padding: '20px' }}>
             <button
                 style={{
                     marginBottom: '10px',
-                    padding: '15px 20px', // Increased padding for a larger button
+                    padding: '15px 20px',
                     backgroundColor: '#c8a165',
                     color: '#fff',
                     border: 'none',
                     borderRadius: '5px',
                     cursor: 'pointer',
-                    fontSize: '18px', // Larger font size
+                    fontSize: '18px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: '10px', // Space between text and arrow
+                    gap: '10px',
                 }}
                 onClick={() => navigate('/home')}
             >
@@ -279,7 +283,7 @@ export default function Encol() {
                         style={{
                             marginTop: '15px',
                             padding: '10px',
-                            backgroundColor: '#c8a165', // Updated color
+                            backgroundColor: '#c8a165',
                             color: '#fff',
                             border: 'none',
                             borderRadius: '5px',
@@ -345,7 +349,6 @@ export default function Encol() {
                     </table>
                 </div>
             )}
-            { /* Modal for selecting item details */ }
             {showModal && selectedItem && (
                 <div
                     style={{
@@ -441,14 +444,14 @@ export default function Encol() {
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    width: '20px', // Reduced width
-                                    height: '20px', // Reduced height
+                                    width: '20px',
+                                    height: '20px',
                                     backgroundColor: '#fff',
                                     color: '#228B22',
                                     fontWeight: 'bold',
                                     borderRadius: '50%',
                                     marginRight: '8px',
-                                    fontSize: '14px', // Adjusted font size for smaller circle
+                                    fontSize: '14px',
                                 }}
                             >
                                 +
@@ -491,13 +494,3 @@ export default function Encol() {
         </div>
     );
 }
-
-
-/*
-import React from 'react';
-import ProcessTable from './ProcessTable';
-
-export default function Encol() {
-    return <ProcessTable processName="encolado" />;
-}
-*/
