@@ -10,7 +10,7 @@ import Troquel from './procesos/troquel';
 import Troza from './procesos/troz'; // Import the Troza component
 import Home from './home/home';
 import EditEncolado from './procesos/edit/editencol';
-
+import Edicion from './home/edicion';
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const user = localStorage.getItem('user'); // Ensure this checks for 'user'
   return user ? <>{children}</> : <Navigate to="/login" />;
@@ -38,6 +38,14 @@ root.render(
           element={
             <ProtectedRoute>
               <Homeprocesos />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/edicion"
+          element={
+            <ProtectedRoute>
+              <Edicion />
             </ProtectedRoute>
           }
         />
