@@ -9,6 +9,7 @@ import reportWebVitals from './reportWebVitals';
 import Troquel from './procesos/troquel';
 import Troza from './procesos/troz'; // Import the Troza component
 import Home from './home/home';
+import EditEncolado from './procesos/edit/editencol';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const user = localStorage.getItem('user'); // Ensure this checks for 'user'
@@ -61,6 +62,14 @@ root.render(
           element={
             <ProtectedRoute>
               <Troza />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/edit-encolado"
+          element={
+            <ProtectedRoute>
+              <EditEncolado />
             </ProtectedRoute>
           }
         />

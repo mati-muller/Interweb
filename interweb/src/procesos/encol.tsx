@@ -34,7 +34,7 @@ export default function Encol() {
     const [placasUsadasFields, setPlacasUsadasFields] = useState<string[]>(['']); // Dynamic fields for Placas Usadas
 
     const fetchData = () => {
-        const apiUrl = `${API_BASE_URL}/procesos/pendientes-encol`;
+        const apiUrl = `${API_BASE_URL}/procesos/pendientes-encolado`;
         setLoading(true);
         axios.get<DataItem[]>(apiUrl)
             .then((response) => {
@@ -182,7 +182,7 @@ export default function Encol() {
                     justifyContent: 'center',
                     gap: '10px', // Space between text and arrow
                 }}
-                onClick={() => navigate('/home')}
+                onClick={() => navigate('/programa-produccion')}
             >
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
