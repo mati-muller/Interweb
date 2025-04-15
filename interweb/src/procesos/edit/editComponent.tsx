@@ -169,33 +169,50 @@ const ReusableProcessComponent: React.FC<ReusableProcessComponentProps> = ({ pro
                         </tr>
                     </thead>
                     <tbody>
-                        {data.map((item) => (
-                            <tr key={item.ID} style={{ backgroundColor: '#fff', borderBottom: '1px solid #ddd' }}>
-                                <td style={{ padding: '10px', border: '1px solid #ddd' }}>{item.NVNUMERO}</td>
-                                <td style={{ padding: '10px', border: '1px solid #ddd' }}>{item.NOMAUX}</td>
-                                <td style={{ padding: '10px', border: '1px solid #ddd' }}>{item.FECHA_ENTREGA}</td>
-                                <td style={{ padding: '10px', border: '1px solid #ddd' }}>{item.PROCESO}</td>
-                                <td style={{ padding: '10px', border: '1px solid #ddd' }}>{item.DETPROD}</td>
-                                <td style={{ padding: '10px', border: '1px solid #ddd' }}>{item.CANT_A_FABRICAR}</td>
-                                <td style={{ padding: '10px', border: '1px solid #ddd' }}>{item.PLACAS_A_USAR}</td>
-                                <td style={{ padding: '10px', border: '1px solid #ddd' }}>{item.CANTIDAD_PLACAS}</td>
-                                <td style={{ padding: '10px', border: '1px solid #ddd', textAlign: 'center' }}>
-                                    <button
-                                        style={{
-                                            padding: '5px 10px',
-                                            backgroundColor: '#c8a165',
-                                            color: '#fff',
-                                            border: 'none',
-                                            borderRadius: '5px',
-                                            cursor: 'pointer',
-                                        }}
-                                        onClick={() => openModal(item)}
-                                    >
-                                        Editar
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
+                        {data.map((item) => {
+                            const placasAUsar = JSON.parse(item.PLACAS_A_USAR); // Parse JSON string to array
+                            const cantidadPlacas = JSON.parse(item.CANTIDAD_PLACAS); // Parse JSON string to array
+
+                            return (
+                                <tr key={item.ID} style={{ backgroundColor: '#fff', borderBottom: '1px solid #ddd' }}>
+                                    <td style={{ padding: '10px', border: '1px solid #ddd' }}>{item.NVNUMERO}</td>
+                                    <td style={{ padding: '10px', border: '1px solid #ddd' }}>{item.NOMAUX}</td>
+                                    <td style={{ padding: '10px', border: '1px solid #ddd' }}>{item.FECHA_ENTREGA}</td>
+                                    <td style={{ padding: '10px', border: '1px solid #ddd' }}>{item.PROCESO}</td>
+                                    <td style={{ padding: '10px', border: '1px solid #ddd' }}>{item.DETPROD}</td>
+                                    <td style={{ padding: '10px', border: '1px solid #ddd' }}>{item.CANT_A_FABRICAR}</td>
+                                    <td style={{ padding: '10px', border: '1px solid #ddd' }}>
+                                        {placasAUsar.map((placa: string, index: number) => (
+                                            <div key={`placa-${index}`} style={{ marginBottom: '5px' }}>
+                                                <strong>Placa:</strong> {placa}
+                                            </div>
+                                        ))}
+                                    </td>
+                                    <td style={{ padding: '10px', border: '1px solid #ddd' }}>
+                                        {cantidadPlacas.map((cantidad: string, index: number) => (
+                                            <div key={`cantidad-${index}`} style={{ marginBottom: '5px' }}>
+                                                <strong>Cantidad:</strong> {cantidad}
+                                            </div>
+                                        ))}
+                                    </td>
+                                    <td style={{ padding: '10px', border: '1px solid #ddd', textAlign: 'center' }}>
+                                        <button
+                                            style={{
+                                                padding: '5px 10px',
+                                                backgroundColor: '#c8a165',
+                                                color: '#fff',
+                                                border: 'none',
+                                                borderRadius: '5px',
+                                                cursor: 'pointer',
+                                            }}
+                                            onClick={() => openModal(item)}
+                                        >
+                                            Editar
+                                        </button>
+                                    </td>
+                                </tr>
+                            );
+                        })}
                     </tbody>
                 </table>
             )}
