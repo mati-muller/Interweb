@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Modal from 'react-modal';
-
+import { config } from '../../set/config'; // Corrected import path
 // Set the app element for react-modal
 Modal.setAppElement('#root');
 
@@ -10,7 +10,7 @@ interface ReusableProcessComponentProps {
 }
 
 const ReusableProcessComponent: React.FC<ReusableProcessComponentProps> = ({ proceso }) => {
-    const API_BASE_URL = 'http://localhost:3000';
+    const API_BASE_URL = config.apiUrl; // Use apiUrl from config
     interface DataItem {
         ID: number;
         NVNUMERO: string;
