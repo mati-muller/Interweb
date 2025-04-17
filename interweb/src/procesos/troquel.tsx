@@ -92,7 +92,7 @@ export default function Troquel() {
 
     const handleAddToSelected = () => {
         if (selectedItem && desiredQuantity) {
-            const inventoryData = JSON.parse(localStorage.getItem('inventorydata') || '[]');
+            const inventoryData = JSON.parse(localStorage.getItem('inventoryData') || '[]');
             const placasUsadas = placasUsadasFields.map((value, index) => 
                 Number(value || (parseFloat(desiredQuantity) * selectedItem.Placas[index].CantMat).toFixed(2))
             ); // Usar el valor existente o calcular si está vacío
@@ -117,7 +117,7 @@ export default function Troquel() {
                     inventoryItem.Cantidad -= placasUsadas[index];
                 }
             });
-            localStorage.setItem('inventorydata', JSON.stringify(inventoryData));
+            localStorage.setItem('inventoryData', JSON.stringify(inventoryData));
 
             const updatedItem = {
                 ...selectedItem,
