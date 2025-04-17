@@ -17,6 +17,10 @@ interface DataItem {
     CANT_A_FABRICAR?: number;
     transformedPlacas?: string[]; // Add transformedPlacas property
     placasUsadas?: number[]; // Add placasUsadas property
+    Placas: {
+        DesProd: string; // Corrected property name
+        CantMat: number;
+    }[]; // Update Placas field
 }
 
 export default function Troz() {
@@ -32,6 +36,8 @@ export default function Troz() {
     const [searchQuery, setSearchQuery] = useState(''); // State for search query
     const [placasFields, setPlacasFields] = useState<string[]>(['']); // Dynamic fields for Placas
     const [placasUsadasFields, setPlacasUsadasFields] = useState<string[]>(['']); // Dynamic fields for Placas Usadas
+    const [alertModalVisible, setAlertModalVisible] = useState(false); // State for alert modal visibility
+    const [alertMessage, setAlertMessage] = useState(''); // State for alert message
 
     const fetchData = () => {
         const apiUrl = `${API_BASE_URL}/procesos/pendientes-trozado`;
@@ -39,8 +45,12 @@ export default function Troz() {
         axios.get<DataItem[]>(apiUrl)
             .then((response) => {
                 if (Array.isArray(response.data)) {
-                    setData(response.data);
-                    setOriginalData(response.data); // Save original data
+                    const transformedData = response.data.map((item) => ({
+                        ...item,
+                        Placas: typeof item.Placas === 'string' ? JSON.parse(item.Placas) : item.Placas, // Parse only if it's a string
+                    }));
+                    setData(transformedData);
+                    setOriginalData(transformedData); // Save original data
                 } else {
                     setError('Unexpected API response format.');
                 }
@@ -55,23 +65,68 @@ export default function Troz() {
     const handleCheckboxClick = (item: DataItem) => {
         setSelectedItem(item);
         setDesiredQuantity(''); // Reset desired quantity
-        setPlacasFields(['']); // Reset placas fields
-        setPlacasUsadasFields(['']); // Reset placas usadas fields
+        setPlacasFields(item.Placas.map((placa) => placa.DesProd)); // Pre-fill all "Tipo Placa" fields with DesProd
+        setPlacasUsadasFields(item.Placas.map(() => '')); // Reset all "Cantidad a usar" fields
         setShowModal(true);
+    };
+
+    useEffect(() => {
+        if (selectedItem && desiredQuantity !== '') {
+            const updatedPlacasUsadas = selectedItem.Placas.map((placa, index) => {
+                const currentValue = placasUsadasFields[index];
+                return currentValue !== '' ? currentValue : (parseFloat(desiredQuantity) * placa.CantMat).toFixed(2);
+            }); // Actualizar dinámicamente con el valor actual
+            setPlacasUsadasFields(updatedPlacasUsadas);
+        }
+    }, [desiredQuantity, selectedItem]); // Remover placasUsadasFields de las dependencias para evitar conflictos
+
+    const handleDesiredQuantityChange = (value: string) => {
+        setDesiredQuantity(value); // Actualizar el estado de desiredQuantity
+        if (selectedItem) {
+            const updatedPlacasUsadas = selectedItem.Placas.map((placa) =>
+                (parseFloat(value) * placa.CantMat).toFixed(2)
+            ); // Recalcular dinámicamente
+            setPlacasUsadasFields(updatedPlacasUsadas);
+        }
     };
 
     const handleAddToSelected = () => {
         if (selectedItem && desiredQuantity) {
-            const transformedPlacas = placasFields.map((placa) => placa.toUpperCase()); // Transform placas
-            const placasUsadas = placasUsadasFields.map(Number); // Convert placasUsadasFields to numbers
+            const inventoryData = JSON.parse(localStorage.getItem('inventoryData') || '[]');
+            const placasUsadas = placasUsadasFields.map((value, index) => 
+                Number(value || (parseFloat(desiredQuantity) * selectedItem.Placas[index].CantMat).toFixed(2))
+            ); // Usar el valor existente o calcular si está vacío
+
+            // Check inventory for each placa
+            for (let i = 0; i < placasFields.length; i++) {
+                const placaName = placasFields[i];
+                const requiredQuantity = placasUsadas[i];
+                const inventoryItem = inventoryData.find((item: { placa: string }) => item.placa === placaName);
+
+                if (!inventoryItem || inventoryItem.Cantidad < requiredQuantity) {
+                    setAlertMessage(`No hay suficiente inventario para la placa "${placaName}". Requerido: ${requiredQuantity}, Disponible: ${inventoryItem ? inventoryItem.Cantidad : 0}`);
+                    setAlertModalVisible(true); // Show alert modal
+                    return; // Stop if inventory is insufficient
+                }
+            }
+
+            // Deduct used inventory
+            placasFields.forEach((placaName, index) => {
+                const inventoryItem = inventoryData.find((item: { placa: string }) => item.placa === placaName);
+                if (inventoryItem) {
+                    inventoryItem.Cantidad -= placasUsadas[index];
+                }
+            });
+            localStorage.setItem('inventoryData', JSON.stringify(inventoryData));
+
             const updatedItem = {
                 ...selectedItem,
                 CANT_A_FABRICAR: parseInt(desiredQuantity, 10),
-                transformedPlacas, // Include transformedPlacas in the item
-                placasUsadas, // Include placasUsadas in the item
+                placasUsadas,
+                transformedPlacas: placasFields,
             };
             setSelectedItems((prev) => [...prev, updatedItem]);
-            setData((prev) => prev.filter((item) => item.ID !== selectedItem.ID)); // Remove from main table
+            setData((prev) => prev.filter((item) => item.ID !== selectedItem.ID));
             setShowModal(false);
             setDesiredQuantity('');
         }
@@ -152,9 +207,11 @@ export default function Troz() {
     };
 
     const updatePlacaUsadaField = (index: number, value: string) => {
-        const updatedPlacasUsadas = [...placasUsadasFields];
-        updatedPlacasUsadas[index] = value;
-        setPlacasUsadasFields(updatedPlacasUsadas);
+        setPlacasUsadasFields((prev) => {
+            const updated = [...prev];
+            updated[index] = value; // Actualizar el valor dinámicamente
+            return updated;
+        });
     };
 
     useEffect(() => {
@@ -182,7 +239,7 @@ export default function Troz() {
                     justifyContent: 'center',
                     gap: '10px', // Space between text and arrow
                 }}
-                onClick={() => navigate('/home')}
+                onClick={() => navigate('/programa-produccion')}
             >
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -379,7 +436,7 @@ export default function Troz() {
                             type="number"
                             placeholder="Cantidad deseada"
                             value={desiredQuantity}
-                            onChange={(e) => setDesiredQuantity(e.target.value)}
+                            onChange={(e) => handleDesiredQuantityChange(e.target.value)} // Usar la nueva función
                             style={{
                                 width: '90%',
                                 padding: '12px',
@@ -407,7 +464,7 @@ export default function Troz() {
                                 />
                                 <input
                                     type="number"
-                                    placeholder={`Placas Usadas ${index + 1}`}
+                                    placeholder={`Cantidad a usar ${index + 1}`}
                                     value={placasUsadasFields[index]}
                                     onChange={(e) => updatePlacaUsadaField(index, e.target.value)}
                                     style={{
@@ -488,6 +545,51 @@ export default function Troz() {
                     </div>
                 </div>
             )}
+            {alertModalVisible && (
+                <div
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        zIndex: 1000,
+                    }}
+                >
+                    <div
+                        style={{
+                            backgroundColor: '#fff',
+                            padding: '20px',
+                            borderRadius: '10px',
+                            width: '400px',
+                            textAlign: 'center',
+                            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+                        }}
+                    >
+                        <h3 style={{ marginBottom: '15px', color: '#333' }}>Alerta de Inventario</h3>
+                        <p style={{ marginBottom: '20px', fontSize: '16px' }}>{alertMessage}</p>
+                        <button
+                            onClick={() => setAlertModalVisible(false)}
+                            style={{
+                                padding: '10px 20px',
+                                backgroundColor: '#c8a165',
+                                color: '#fff',
+                                border: 'none',
+                                borderRadius: '5px',
+                                cursor: 'pointer',
+                                fontSize: '16px',
+                            }}
+                        >
+                            Cerrar
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
+
