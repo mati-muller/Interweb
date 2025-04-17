@@ -36,6 +36,8 @@ export default function Encol() {
     const [searchQuery, setSearchQuery] = useState(''); // State for search query
     const [placasFields, setPlacasFields] = useState<string[]>(['']); // Dynamic fields for Placas
     const [placasUsadasFields, setPlacasUsadasFields] = useState<string[]>(['']); // Dynamic fields for Placas Usadas
+    const [alertModalVisible, setAlertModalVisible] = useState(false); // State for alert modal visibility
+    const [alertMessage, setAlertMessage] = useState(''); // State for alert message
 
     const fetchData = () => {
         const apiUrl = `${API_BASE_URL}/procesos/pendientes-encolado`;
@@ -90,9 +92,33 @@ export default function Encol() {
 
     const handleAddToSelected = () => {
         if (selectedItem && desiredQuantity) {
+            const inventoryData = JSON.parse(localStorage.getItem('inventorydata') || '[]');
             const placasUsadas = placasUsadasFields.map((value, index) => 
                 Number(value || (parseFloat(desiredQuantity) * selectedItem.Placas[index].CantMat).toFixed(2))
             ); // Usar el valor existente o calcular si está vacío
+
+            // Check inventory for each placa
+            for (let i = 0; i < placasFields.length; i++) {
+                const placaName = placasFields[i];
+                const requiredQuantity = placasUsadas[i];
+                const inventoryItem = inventoryData.find((item: { placa: string }) => item.placa === placaName);
+
+                if (!inventoryItem || inventoryItem.Cantidad < requiredQuantity) {
+                    setAlertMessage(`No hay suficiente inventario para la placa "${placaName}". Requerido: ${requiredQuantity}, Disponible: ${inventoryItem ? inventoryItem.Cantidad : 0}`);
+                    setAlertModalVisible(true); // Show alert modal
+                    return; // Stop if inventory is insufficient
+                }
+            }
+
+            // Deduct used inventory
+            placasFields.forEach((placaName, index) => {
+                const inventoryItem = inventoryData.find((item: { placa: string }) => item.placa === placaName);
+                if (inventoryItem) {
+                    inventoryItem.Cantidad -= placasUsadas[index];
+                }
+            });
+            localStorage.setItem('inventorydata', JSON.stringify(inventoryData));
+
             const updatedItem = {
                 ...selectedItem,
                 CANT_A_FABRICAR: parseInt(desiredQuantity, 10),
@@ -516,6 +542,50 @@ export default function Encol() {
                                 Cancelar
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+            {alertModalVisible && (
+                <div
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        zIndex: 1000,
+                    }}
+                >
+                    <div
+                        style={{
+                            backgroundColor: '#fff',
+                            padding: '20px',
+                            borderRadius: '10px',
+                            width: '400px',
+                            textAlign: 'center',
+                            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+                        }}
+                    >
+                        <h3 style={{ marginBottom: '15px', color: '#333' }}>Alerta de Inventario</h3>
+                        <p style={{ marginBottom: '20px', fontSize: '16px' }}>{alertMessage}</p>
+                        <button
+                            onClick={() => setAlertModalVisible(false)}
+                            style={{
+                                padding: '10px 20px',
+                                backgroundColor: '#c8a165',
+                                color: '#fff',
+                                border: 'none',
+                                borderRadius: '5px',
+                                cursor: 'pointer',
+                                fontSize: '16px',
+                            }}
+                        >
+                            Cerrar
+                        </button>
                     </div>
                 </div>
             )}

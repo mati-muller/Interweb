@@ -1,5 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios'; // Import Axios
+import { config } from '../set/config'; // Import config
 
 export default function Home() {
     const navigate = useNavigate();
@@ -9,7 +11,15 @@ export default function Home() {
         if (!user) {
             navigate('/login'); // Redirect to login if user is not found
         }
-    }, [navigate]);
+        // Fetch inventory data and store it in localStorage
+        axios.get(`${config.apiUrl}/inventario/data`)
+            .then(response => {
+                localStorage.setItem('inventoryData', JSON.stringify(response.data));
+            })
+            .catch(error => {
+                console.error('Error fetching inventory data:', error);
+            });
+    }); // Removed dependency array to trigger on every render
 
     const handleLogout = () => {
         localStorage.clear();
