@@ -40,7 +40,7 @@ export default function Troquel() {
     const [alertMessage, setAlertMessage] = useState(''); // State for alert message
 
     const fetchData = () => {
-        const apiUrl = `${API_BASE_URL}/procesos/pendientes-emplacado`;
+        const apiUrl = `${API_BASE_URL}/procesos/pendientes-troquelado`;
         setLoading(true);
         axios.get<DataItem[]>(apiUrl)
             .then((response) => {
@@ -163,7 +163,7 @@ export default function Troquel() {
         }));
         console.log('Submitting selected items:', payload); // Log the payload for debugging
 
-        axios.post(`${API_BASE_URL}/app/update-encolado`, { items: payload }, {
+        axios.post(`${API_BASE_URL}/app/update-troquelado`, { items: payload }, {
             headers: { 'Content-Type': 'application/json' }
         })
             .then(() => {
