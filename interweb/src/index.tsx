@@ -11,6 +11,7 @@ import Troza from './procesos/troz'; // Import the Troza component
 import Home from './home/home';
 import EditEncolado from './procesos/edit/editencol';
 import Edicion from './home/edicion';
+import Emplacado from './procesos/emplac';
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const user = localStorage.getItem('user'); // Ensure this checks for 'user'
   return user ? <>{children}</> : <Navigate to="/login" />;
@@ -74,10 +75,18 @@ root.render(
           }
         />
         <Route
-          path="/edit-encolado"
+          path="/troquelado"
           element={
             <ProtectedRoute>
-              <EditEncolado />
+              <Troquel />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/emplacado"
+          element={
+            <ProtectedRoute>
+              <Emplacado />
             </ProtectedRoute>
           }
         />
