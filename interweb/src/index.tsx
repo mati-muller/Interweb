@@ -90,7 +90,17 @@ root.render(
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/edit-encolado"
+          element={
+            <ProtectedRoute>
+              <EditEncolado />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
+      
+
     </Router>
   </React.StrictMode>
 );
