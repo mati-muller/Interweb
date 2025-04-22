@@ -283,6 +283,9 @@ export default function Encol() {
                     <ul style={{ listStyleType: 'none', padding: 0 }}>
                         {selectedItems.map((item, index) => (
                             <li key={item.ID} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px', backgroundColor: '#fff', padding: '10px', borderRadius: '5px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}>
+                                <span style={{ marginRight: '10px', fontSize: '14px', fontWeight: 'bold' }}>
+                                    {index + 1}.
+                                </span>
                                 <span style={{ flex: 1, fontSize: '14px' }}>
                                     <strong>Producto:</strong> {item.DETPROD} | <strong>Cliente:</strong> {item.NOMAUX} | <strong>Cantidad:</strong> {item.CANT_A_FABRICAR}
                                 </span>
