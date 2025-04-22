@@ -12,6 +12,8 @@ import Home from './home/home';
 import EditEncolado from './procesos/edit/editencol';
 import Edicion from './home/edicion';
 import Emplacado from './procesos/emplac';
+import ProcesosTable from './procesos/procesos';
+
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const user = localStorage.getItem('user'); // Ensure this checks for 'user'
   return user ? <>{children}</> : <Navigate to="/login" />;
@@ -95,6 +97,14 @@ root.render(
           element={
             <ProtectedRoute>
               <EditEncolado />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/procesos"
+          element={
+            <ProtectedRoute>
+              <ProcesosTable />
             </ProtectedRoute>
           }
         />
