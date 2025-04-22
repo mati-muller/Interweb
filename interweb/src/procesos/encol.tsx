@@ -38,6 +38,7 @@ export default function Encol() {
     const [placasUsadasFields, setPlacasUsadasFields] = useState<string[]>(['']); // Dynamic fields for Placas Usadas
     const [alertModalVisible, setAlertModalVisible] = useState(false); // State for alert modal visibility
     const [alertMessage, setAlertMessage] = useState(''); // State for alert message
+    const [sinConsumoPlacas, setSinConsumoPlacas] = useState(false); // State for "sin consumo de placas"
 
     const fetchData = () => {
         const apiUrl = `${API_BASE_URL}/procesos/pendientes-encolado`;
@@ -71,14 +72,14 @@ export default function Encol() {
     };
 
     useEffect(() => {
-        if (selectedItem && desiredQuantity !== '') {
+        if (selectedItem && desiredQuantity !== '' && !sinConsumoPlacas) {
             const updatedPlacasUsadas = selectedItem.Placas.map((placa, index) => {
                 const currentValue = placasUsadasFields[index];
                 return currentValue !== '' ? currentValue : (parseFloat(desiredQuantity) * placa.CantMat).toFixed(2);
             }); // Actualizar dinámicamente con el valor actual
             setPlacasUsadasFields(updatedPlacasUsadas);
         }
-    }, [desiredQuantity, selectedItem]); // Remover placasUsadasFields de las dependencias para evitar conflictos
+    }, [desiredQuantity, selectedItem, sinConsumoPlacas]); // Add sinConsumoPlacas to dependencies
 
     const handleDesiredQuantityChange = (value: string) => {
         setDesiredQuantity(value); // Actualizar el estado de desiredQuantity
@@ -212,6 +213,17 @@ export default function Encol() {
             updated[index] = value; // Actualizar el valor dinámicamente
             return updated;
         });
+    };
+
+    const handleSinConsumoPlacasChange = (checked: boolean) => {
+        setSinConsumoPlacas(checked);
+        if (checked) {
+            setPlacasFields(['']); // Clear placas fields
+            setPlacasUsadasFields(['']); // Clear placas quantities
+        } else if (selectedItem) {
+            setPlacasFields(selectedItem.Placas.map((placa) => placa.DesProd)); // Refill placas fields
+            setPlacasUsadasFields(selectedItem.Placas.map(() => '')); // Reset quantities
+        }
     };
 
     useEffect(() => {
@@ -477,41 +489,51 @@ export default function Encol() {
                                 />
                             </div>
                         ))}
-                        <button
-                            onClick={addPlacaField}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                padding: '10px 15px',
-                                backgroundColor: '#228B22',
-                                color: '#fff',
-                                border: 'none',
-                                borderRadius: '5px',
-                                cursor: 'pointer',
-                                fontSize: '16px',
-                                marginBottom: '15px',
-                            }}
-                        >
-                            <span
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '15px' }}>
+                            <button
+                                onClick={addPlacaField}
                                 style={{
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    width: '20px', // Reduced width
-                                    height: '20px', // Reduced height
-                                    backgroundColor: '#fff',
-                                    color: '#228B22',
-                                    fontWeight: 'bold',
-                                    borderRadius: '50%',
-                                    marginRight: '8px',
-                                    fontSize: '14px', // Adjusted font size for smaller circle
+                                    padding: '10px 15px',
+                                    backgroundColor: '#228B22',
+                                    color: '#fff',
+                                    border: 'none',
+                                    borderRadius: '5px',
+                                    cursor: 'pointer',
+                                    fontSize: '16px',
                                 }}
                             >
-                                +
-                            </span>
-                            Agregar Placa
-                        </button>
+                                <span
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        width: '20px', // Reduced width
+                                        height: '20px', // Reduced height
+                                        backgroundColor: '#fff',
+                                        color: '#228B22',
+                                        fontWeight: 'bold',
+                                        borderRadius: '50%',
+                                        marginRight: '8px',
+                                        fontSize: '14px', // Adjusted font size for smaller circle
+                                    }}
+                                >
+                                    +
+                                </span>
+                                Agregar Placa
+                            </button>
+                            <label style={{ fontSize: '16px', color: '#333', display: 'flex', alignItems: 'center' }}>
+                                <input
+                                    type="checkbox"
+                                    checked={sinConsumoPlacas}
+                                    onChange={(e) => handleSinConsumoPlacasChange(e.target.checked)}
+                                    style={{ marginRight: '10px' }}
+                                />
+                                Sin consumo de placas
+                            </label>
+                        </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                             <button
                                 onClick={handleAddToSelected}
