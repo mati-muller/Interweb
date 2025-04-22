@@ -127,7 +127,6 @@ export default function Encol() {
                 transformedPlacas: placasFields,
             };
             setSelectedItems((prev) => [...prev, updatedItem]);
-            setData((prev) => prev.filter((item) => item.ID !== selectedItem.ID));
             setShowModal(false);
             setDesiredQuantity('');
         }
