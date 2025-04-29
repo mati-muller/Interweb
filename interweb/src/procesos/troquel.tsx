@@ -38,6 +38,10 @@ export default function Troquel() {
     const [placasUsadasFields, setPlacasUsadasFields] = useState<string[]>(['']); // Dynamic fields for Placas Usadas
     const [alertModalVisible, setAlertModalVisible] = useState(false); // State for alert modal visibility
     const [alertMessage, setAlertMessage] = useState(''); // State for alert message
+    const [sinConsumoPlacas, setSinConsumoPlacas] = useState(false); // State for "sin consumo de placas"
+    const [selectedTroqueladora, setSelectedTroqueladora] = useState<'Troqueladora Grande' | 'Troqueladora Chica'>('Troqueladora Grande'); // Dropdown state
+    const [selectedItemsTroqueladoraGrande, setSelectedItemsTroqueladoraGrande] = useState<DataItem[]>([]); // Separate table for Troqueladora Grande
+    const [selectedItemsTroqueladoraChica, setSelectedItemsTroqueladoraChica] = useState<DataItem[]>([]); // Separate table for Troqueladora Chica
 
     const fetchData = () => {
         const apiUrl = `${API_BASE_URL}/procesos/pendientes-troquelado`;
@@ -71,14 +75,14 @@ export default function Troquel() {
     };
 
     useEffect(() => {
-        if (selectedItem && desiredQuantity !== '') {
+        if (selectedItem && desiredQuantity !== '' && !sinConsumoPlacas) {
             const updatedPlacasUsadas = selectedItem.Placas.map((placa, index) => {
                 const currentValue = placasUsadasFields[index];
                 return currentValue !== '' ? currentValue : (parseFloat(desiredQuantity) * placa.CantMat).toFixed(2);
             }); // Actualizar dinámicamente con el valor actual
             setPlacasUsadasFields(updatedPlacasUsadas);
         }
-    }, [desiredQuantity, selectedItem]); // Remover placasUsadasFields de las dependencias para evitar conflictos
+    }, [desiredQuantity, selectedItem, sinConsumoPlacas]); // Add sinConsumoPlacas to dependencies
 
     const handleDesiredQuantityChange = (value: string) => {
         setDesiredQuantity(value); // Actualizar el estado de desiredQuantity
@@ -125,31 +129,55 @@ export default function Troquel() {
                 placasUsadas,
                 transformedPlacas: placasFields,
             };
-            setSelectedItems((prev) => [...prev, updatedItem]);
-            setData((prev) => prev.filter((item) => item.ID !== selectedItem.ID));
+
+            if (selectedTroqueladora === 'Troqueladora Grande') {
+                setSelectedItemsTroqueladoraGrande((prev) => [...prev, updatedItem]);
+            } else {
+                setSelectedItemsTroqueladoraChica((prev) => [...prev, updatedItem]);
+            }
+
             setShowModal(false);
             setDesiredQuantity('');
         }
     };
 
-    const handleRemoveFromSelected = (index: number) => {
-        setSelectedItems((prev) => {
-            const removedItem = prev[index];
-            setData((prevData) => {
-                const updatedData = prevData.some((item) => item.ID === removedItem.ID)
-                    ? prevData // If the item already exists, do not add it again
-                    : [...prevData, removedItem];
-                return updatedData.sort((a, b) => {
-                    const originalIndexA = originalData.findIndex((item) => item.ID === a.ID);
-                    const originalIndexB = originalData.findIndex((item) => item.ID === b.ID);
-                    return originalIndexA - originalIndexB;
-                }); // Restore original order
+    const handleRemoveFromSelected = (index: number, troqueladoraType: 'Troqueladora Grande' | 'Troqueladora Chica') => {
+        if (troqueladoraType === 'Troqueladora Grande') {
+            setSelectedItemsTroqueladoraGrande((prev) => {
+                const removedItem = prev[index];
+                setData((prevData) => {
+                    const updatedData = prevData.some((item) => item.ID === removedItem.ID)
+                        ? prevData // If the item already exists, do not add it again
+                        : [...prevData, removedItem];
+                    return updatedData.sort((a, b) => {
+                        const originalIndexA = originalData.findIndex((item) => item.ID === a.ID);
+                        const originalIndexB = originalData.findIndex((item) => item.ID === b.ID);
+                        return originalIndexA - originalIndexB;
+                    }); // Restore original order
+                });
+                return prev.filter((_, i) => i !== index);
             });
-            return prev.filter((_, i) => i !== index);
-        });
+        } else {
+            setSelectedItemsTroqueladoraChica((prev) => {
+                const removedItem = prev[index];
+                setData((prevData) => {
+                    const updatedData = prevData.some((item) => item.ID === removedItem.ID)
+                        ? prevData // If the item already exists, do not add it again
+                        : [...prevData, removedItem];
+                    return updatedData.sort((a, b) => {
+                        const originalIndexA = originalData.findIndex((item) => item.ID === a.ID);
+                        const originalIndexB = originalData.findIndex((item) => item.ID === b.ID);
+                        return originalIndexA - originalIndexB;
+                    }); // Restore original order
+                });
+                return prev.filter((_, i) => i !== index);
+            });
+        }
     };
 
-    const handleSubmitSelected = () => {
+    const handleSubmitSelected = (troqueladoraType: 'Troqueladora Grande' | 'Troqueladora Chica') => {
+        const selectedItems = troqueladoraType === 'Troqueladora Grande' ? selectedItemsTroqueladoraGrande : selectedItemsTroqueladoraChica;
+
         if (selectedItems.length === 0) {
             alert('No items selected.');
             return;
@@ -161,19 +189,24 @@ export default function Troquel() {
             transformedPlacas: item.transformedPlacas || [], // Include transformedPlacas
             placasUsadas: item.placasUsadas || [], // Include placasUsadas
         }));
-        console.log('Submitting selected items:', payload); // Log the payload for debugging
 
-        axios.post(`${API_BASE_URL}/app/update-troquelado`, { items: payload }, {
+        const endpoint = troqueladoraType === 'Troqueladora Grande' ? `${API_BASE_URL}/app/update-troquelado` : `${API_BASE_URL}/app/update-troquelado2`;
+
+        axios.post(endpoint, { items: payload }, {
             headers: { 'Content-Type': 'application/json' }
         })
             .then(() => {
-                alert('Selected items submitted successfully!');
-                setSelectedItems([]);
+                alert(`Selected items for ${troqueladoraType} submitted successfully!`);
+                if (troqueladoraType === 'Troqueladora Grande') {
+                    setSelectedItemsTroqueladoraGrande([]);
+                } else {
+                    setSelectedItemsTroqueladoraChica([]);
+                }
                 fetchData();
             })
             .catch((error) => {
-                console.error('Error submitting selected items:', error);
-                alert('Failed to submit selected items.');
+                console.error(`Error submitting selected items for ${troqueladoraType}:`, error);
+                alert(`Failed to submit selected items for ${troqueladoraType}.`);
             });
     };
 
@@ -212,6 +245,17 @@ export default function Troquel() {
             updated[index] = value; // Actualizar el valor dinámicamente
             return updated;
         });
+    };
+
+    const handleSinConsumoPlacasChange = (checked: boolean) => {
+        setSinConsumoPlacas(checked);
+        if (checked) {
+            setPlacasFields(['']); // Clear placas fields
+            setPlacasUsadasFields(['']); // Clear placas quantities
+        } else if (selectedItem) {
+            setPlacasFields(selectedItem.Placas.map((placa) => placa.DesProd)); // Refill placas fields
+            setPlacasUsadasFields(selectedItem.Placas.map(() => '')); // Reset quantities
+        }
     };
 
     useEffect(() => {
@@ -266,12 +310,15 @@ export default function Troquel() {
                     fontSize: '16px',
                 }}
             />
-            {selectedItems.length > 0 && (
+            {selectedItemsTroqueladoraGrande.length > 0 && (
                 <div style={{ marginBottom: '20px', padding: '15px', border: '1px solid #ddd', borderRadius: '5px', backgroundColor: '#f9f9f9' }}>
-                    <h3 style={{ marginBottom: '15px', color: '#333' }}>Elementos Seleccionados</h3>
+                    <h3 style={{ marginBottom: '15px', color: '#333' }}>Elementos Seleccionados - Troqueladora Grande</h3>
                     <ul style={{ listStyleType: 'none', padding: 0 }}>
-                        {selectedItems.map((item, index) => (
+                        {selectedItemsTroqueladoraGrande.map((item, index) => (
                             <li key={item.ID} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px', backgroundColor: '#fff', padding: '10px', borderRadius: '5px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}>
+                                <span style={{ marginRight: '10px', fontSize: '14px', fontWeight: 'bold' }}>
+                                    {index + 1}.
+                                </span>
                                 <span style={{ flex: 1, fontSize: '14px' }}>
                                     <strong>Producto:</strong> {item.DETPROD} | <strong>Cliente:</strong> {item.NOMAUX} | <strong>Cantidad:</strong> {item.CANT_A_FABRICAR}
                                 </span>
@@ -301,7 +348,7 @@ export default function Troquel() {
                                         cursor: 'pointer',
                                     }}
                                     onClick={() => moveItemDown(index)}
-                                    disabled={index === selectedItems.length - 1}
+                                    disabled={index === selectedItemsTroqueladoraGrande.length - 1}
                                 >
                                     ↓
                                 </button>
@@ -317,7 +364,7 @@ export default function Troquel() {
                                         alignItems: 'center',
                                         justifyContent: 'center',
                                     }}
-                                    onClick={() => handleRemoveFromSelected(index)}
+                                    onClick={() => handleRemoveFromSelected(index, 'Troqueladora Grande')}
                                 >
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"
@@ -344,9 +391,96 @@ export default function Troquel() {
                             width: '100%',
                             fontSize: '16px',
                         }}
-                        onClick={handleSubmitSelected}
+                        onClick={() => handleSubmitSelected('Troqueladora Grande')}
                     >
-                        Subir Seleccionados
+                        Subir Seleccionados - Troqueladora Grande
+                    </button>
+                </div>
+            )}
+            {selectedItemsTroqueladoraChica.length > 0 && (
+                <div style={{ marginBottom: '20px', padding: '15px', border: '1px solid #ddd', borderRadius: '5px', backgroundColor: '#f9f9f9' }}>
+                    <h3 style={{ marginBottom: '15px', color: '#333' }}>Elementos Seleccionados - Troqueladora Chica</h3>
+                    <ul style={{ listStyleType: 'none', padding: 0 }}>
+                        {selectedItemsTroqueladoraChica.map((item, index) => (
+                            <li key={item.ID} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px', backgroundColor: '#fff', padding: '10px', borderRadius: '5px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}>
+                                <span style={{ marginRight: '10px', fontSize: '14px', fontWeight: 'bold' }}>
+                                    {index + 1}.
+                                </span>
+                                <span style={{ flex: 1, fontSize: '14px' }}>
+                                    <strong>Producto:</strong> {item.DETPROD} | <strong>Cliente:</strong> {item.NOMAUX} | <strong>Cantidad:</strong> {item.CANT_A_FABRICAR}
+                                </span>
+                                <button
+                                    style={{
+                                        marginRight: '5px',
+                                        padding: '5px 10px',
+                                        backgroundColor: '#4caf50',
+                                        color: '#fff',
+                                        border: 'none',
+                                        borderRadius: '5px',
+                                        cursor: 'pointer',
+                                    }}
+                                    onClick={() => moveItemUp(index)}
+                                    disabled={index === 0}
+                                >
+                                    ↑
+                                </button>
+                                <button
+                                    style={{
+                                        marginRight: '5px',
+                                        padding: '5px 10px',
+                                        backgroundColor: '#4caf50',
+                                        color: '#fff',
+                                        border: 'none',
+                                        borderRadius: '5px',
+                                        cursor: 'pointer',
+                                    }}
+                                    onClick={() => moveItemDown(index)}
+                                    disabled={index === selectedItemsTroqueladoraChica.length - 1}
+                                >
+                                    ↓
+                                </button>
+                                <button
+                                    style={{
+                                        padding: '5px 10px',
+                                        backgroundColor: '#ff4c4c',
+                                        color: '#fff',
+                                        border: 'none',
+                                        borderRadius: '5px',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                    }}
+                                    onClick={() => handleRemoveFromSelected(index, 'Troqueladora Chica')}
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 24 24"
+                                        fill="currentColor"
+                                        width="16px"
+                                        height="16px"
+                                    >
+                                        <path d="M3 6h18v2H3V6zm2 3h14v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V9zm5 2v8h2v-8H8zm4 0v8h2v-8h-2zM9 4h6v2H9V4z" />
+                                    </svg>
+                                </button>
+                            </li>
+                        ))}
+                    </ul>
+                    <button
+                        style={{
+                            marginTop: '15px',
+                            padding: '10px',
+                            backgroundColor: '#c8a165', // Updated color
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '5px',
+                            cursor: 'pointer',
+                            width: '100%',
+                            fontSize: '16px',
+                        }}
+                        onClick={() => handleSubmitSelected('Troqueladora Chica')}
+                    >
+                        Subir Seleccionados - Troqueladora Chica
                     </button>
                 </div>
             )}
@@ -477,41 +611,66 @@ export default function Troquel() {
                                 />
                             </div>
                         ))}
-                        <button
-                            onClick={addPlacaField}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                padding: '10px 15px',
-                                backgroundColor: '#228B22',
-                                color: '#fff',
-                                border: 'none',
-                                borderRadius: '5px',
-                                cursor: 'pointer',
-                                fontSize: '16px',
-                                marginBottom: '15px',
-                            }}
-                        >
-                            <span
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '15px' }}>
+                            <button
+                                onClick={addPlacaField}
                                 style={{
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    width: '20px', // Reduced width
-                                    height: '20px', // Reduced height
-                                    backgroundColor: '#fff',
-                                    color: '#228B22',
-                                    fontWeight: 'bold',
-                                    borderRadius: '50%',
-                                    marginRight: '8px',
-                                    fontSize: '14px', // Adjusted font size for smaller circle
+                                    padding: '10px 15px',
+                                    backgroundColor: '#228B22',
+                                    color: '#fff',
+                                    border: 'none',
+                                    borderRadius: '5px',
+                                    cursor: 'pointer',
+                                    fontSize: '16px',
                                 }}
                             >
-                                +
-                            </span>
-                            Agregar Placa
-                        </button>
+                                <span
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        width: '20px', // Reduced width
+                                        height: '20px', // Reduced height
+                                        backgroundColor: '#fff',
+                                        color: '#228B22',
+                                        fontWeight: 'bold',
+                                        borderRadius: '50%',
+                                        marginRight: '8px',
+                                        fontSize: '14px', // Adjusted font size for smaller circle
+                                    }}
+                                >
+                                    +
+                                </span>
+                                Agregar Placa
+                            </button>
+                            <label style={{ fontSize: '16px', color: '#333', display: 'flex', alignItems: 'center' }}>
+                                <input
+                                    type="checkbox"
+                                    checked={sinConsumoPlacas}
+                                    onChange={(e) => handleSinConsumoPlacasChange(e.target.checked)}
+                                    style={{ marginRight: '10px' }}
+                                />
+                                Sin consumo de placas
+                            </label>
+                        </div>
+                        <select
+                            value={selectedTroqueladora}
+                            onChange={(e) => setSelectedTroqueladora(e.target.value as 'Troqueladora Grande' | 'Troqueladora Chica')}
+                            style={{
+                                width: '90%',
+                                padding: '12px',
+                                marginBottom: '15px',
+                                border: '1px solid #ccc',
+                                borderRadius: '5px',
+                                fontSize: '16px',
+                            }}
+                        >
+                            <option value="Troqueladora Grande">Troqueladora Grande</option>
+                            <option value="Troqueladora Chica">Troqueladora Chica</option>
+                        </select>
                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                             <button
                                 onClick={handleAddToSelected}
