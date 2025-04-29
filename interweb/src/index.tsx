@@ -13,6 +13,7 @@ import EditEncolado from './procesos/edit/editencol';
 import Edicion from './home/edicion';
 import Emplacado from './procesos/emplac';
 import ProcesosTable from './procesos/procesos';
+import Mult from './procesos/mult';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const user = localStorage.getItem('user'); // Ensure this checks for 'user'
@@ -105,6 +106,14 @@ root.render(
           element={
             <ProtectedRoute>
               <ProcesosTable />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/multiple"
+          element={
+            <ProtectedRoute>
+              <Mult />
             </ProtectedRoute>
           }
         />

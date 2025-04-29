@@ -96,51 +96,51 @@ export default function Encol() {
 
     const handleAddToSelected = () => {
         if (selectedItem && desiredQuantity) {
-            const inventoryData = JSON.parse(localStorage.getItem('inventoryData') || '[]');
-            const placasUsadas = placasUsadasFields.map((value, index) => 
-                Number(value || (parseFloat(desiredQuantity) * selectedItem.Placas[index].CantMat).toFixed(2))
-            ); // Usar el valor existente o calcular si está vacío
-
-            // Check inventory for each placa
-            for (let i = 0; i < placasFields.length; i++) {
-                const placaName = placasFields[i];
-                const requiredQuantity = placasUsadas[i];
-                const inventoryItem = inventoryData.find((item: { placa: string }) => item.placa === placaName);
-
-                if (!inventoryItem || inventoryItem.Cantidad < requiredQuantity) {
-                    setAlertMessage(`No hay suficiente inventario para la placa "${placaName}". Requerido: ${requiredQuantity}, Disponible: ${inventoryItem ? inventoryItem.Cantidad : 0}`);
-                    setAlertModalVisible(true); // Show alert modal
-                    return; // Stop if inventory is insufficient
+            if (!sinConsumoPlacas) {
+                const inventoryData = JSON.parse(localStorage.getItem('inventoryData') || '[]');
+                const placasUsadas = placasUsadasFields.map((value, index) => 
+                    Number(value || (parseFloat(desiredQuantity) * selectedItem.Placas[index].CantMat).toFixed(2))
+                );
+    
+                for (let i = 0; i < placasFields.length; i++) {
+                    const placaName = placasFields[i];
+                    const requiredQuantity = placasUsadas[i];
+                    const inventoryItem = inventoryData.find((item: { placa: string }) => item.placa === placaName);
+    
+                    if (!inventoryItem || inventoryItem.Cantidad < requiredQuantity) {
+                        setAlertMessage(`No hay suficiente inventario para la placa "${placaName}". Requerido: ${requiredQuantity}, Disponible: ${inventoryItem ? inventoryItem.Cantidad : 0}`);
+                        setAlertModalVisible(true);
+                        return;
+                    }
                 }
+    
+                placasFields.forEach((placaName, index) => {
+                    const inventoryItem = inventoryData.find((item: { placa: string }) => item.placa === placaName);
+                    if (inventoryItem) {
+                        inventoryItem.Cantidad -= placasUsadas[index];
+                    }
+                });
+                localStorage.setItem('inventoryData', JSON.stringify(inventoryData));
             }
-
-            // Deduct used inventory
-            placasFields.forEach((placaName, index) => {
-                const inventoryItem = inventoryData.find((item: { placa: string }) => item.placa === placaName);
-                if (inventoryItem) {
-                    inventoryItem.Cantidad -= placasUsadas[index];
-                }
-            });
-            localStorage.setItem('inventoryData', JSON.stringify(inventoryData));
-
+    
             const updatedItem = {
                 ...selectedItem,
                 CANT_A_FABRICAR: parseInt(desiredQuantity, 10),
-                placasUsadas,
-                transformedPlacas: placasFields,
+                placasUsadas: sinConsumoPlacas ? [] : placasUsadasFields.map(Number),
+                transformedPlacas: sinConsumoPlacas ? [] : placasFields,
             };
-
+    
             if (selectedEncolado === 'Encolado 1') {
                 setSelectedItemsEncolado1((prev) => [...prev, updatedItem]);
             } else {
                 setSelectedItemsEncolado2((prev) => [...prev, updatedItem]);
             }
-
+    
             setShowModal(false);
             setDesiredQuantity('');
         }
     };
-
+    
     const handleRemoveFromSelected = (index: number, encoladoType: 'Encolado 1' | 'Encolado 2') => {
         if (encoladoType === 'Encolado 1') {
             setSelectedItemsEncolado1((prev) => {
@@ -210,22 +210,39 @@ export default function Encol() {
             });
     };
 
-    const moveItemUp = (index: number) => {
+    const moveItemUp = (index: number, encoladoType: 'Encolado 1' | 'Encolado 2') => {
         if (index === 0) return;
-        setSelectedItems((prev) => {
-            const updated = [...prev];
-            [updated[index - 1], updated[index]] = [updated[index], updated[index - 1]];
-            return updated;
-        });
+        if (encoladoType === 'Encolado 1') {
+            setSelectedItemsEncolado1((prev) => {
+                const updated = [...prev];
+                [updated[index - 1], updated[index]] = [updated[index], updated[index - 1]];
+                return updated;
+            });
+        } else {
+            setSelectedItemsEncolado2((prev) => {
+                const updated = [...prev];
+                [updated[index - 1], updated[index]] = [updated[index], updated[index - 1]];
+                return updated;
+            });
+        }
     };
 
-    const moveItemDown = (index: number) => {
-        if (index === selectedItems.length - 1) return;
-        setSelectedItems((prev) => {
-            const updated = [...prev];
-            [updated[index], updated[index + 1]] = [updated[index + 1], updated[index]];
-            return updated;
-        });
+    const moveItemDown = (index: number, encoladoType: 'Encolado 1' | 'Encolado 2') => {
+        if (encoladoType === 'Encolado 1') {
+            setSelectedItemsEncolado1((prev) => {
+                if (index === prev.length - 1) return prev;
+                const updated = [...prev];
+                [updated[index], updated[index + 1]] = [updated[index + 1], updated[index]];
+                return updated;
+            });
+        } else {
+            setSelectedItemsEncolado2((prev) => {
+                if (index === prev.length - 1) return prev;
+                const updated = [...prev];
+                [updated[index], updated[index + 1]] = [updated[index + 1], updated[index]];
+                return updated;
+            });
+        }
     };
 
     const addPlacaField = () => {
@@ -332,7 +349,7 @@ export default function Encol() {
                                         borderRadius: '5px',
                                         cursor: 'pointer',
                                     }}
-                                    onClick={() => moveItemUp(index)}
+                                    onClick={() => moveItemUp(index, 'Encolado 1')}
                                     disabled={index === 0}
                                 >
                                     ↑
@@ -347,7 +364,7 @@ export default function Encol() {
                                         borderRadius: '5px',
                                         cursor: 'pointer',
                                     }}
-                                    onClick={() => moveItemDown(index)}
+                                    onClick={() => moveItemDown(index, 'Encolado 1')}
                                     disabled={index === selectedItemsEncolado1.length - 1}
                                 >
                                     ↓
@@ -419,7 +436,7 @@ export default function Encol() {
                                         borderRadius: '5px',
                                         cursor: 'pointer',
                                     }}
-                                    onClick={() => moveItemUp(index)}
+                                    onClick={() => moveItemUp(index, 'Encolado 2')}
                                     disabled={index === 0}
                                 >
                                     ↑
@@ -434,7 +451,7 @@ export default function Encol() {
                                         borderRadius: '5px',
                                         cursor: 'pointer',
                                     }}
-                                    onClick={() => moveItemDown(index)}
+                                    onClick={() => moveItemDown(index, 'Encolado 2')}
                                     disabled={index === selectedItemsEncolado2.length - 1}
                                 >
                                     ↓

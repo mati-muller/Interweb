@@ -34,6 +34,9 @@ export default function Homeprocesos() {
                 <button style={styles.button} onClick={() => navigate('/troquelado')}>
                     Troquelado
                 </button>
+                <button style={styles.button} onClick={() => navigate('/multiple')}>
+                    Múltiple
+                </button>
                 <button style={styles.button} onClick={() => navigate('/pegado')}>
                     Pegado
                 </button>
