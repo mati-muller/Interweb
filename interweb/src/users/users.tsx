@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { config } from '../set/config'; // Import config
 import redTrashIcon from '../assets/red-trash-can-icon.svg'; // Updated path to src/assets/
+import settingsIcon from '../assets/settings-icon.svg'; // Import settings icon
 
 interface User {
     id: number;
@@ -14,6 +15,9 @@ export default function UserTable() {
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [showModal, setShowModal] = useState(false);
+    const [selectedUser, setSelectedUser] = useState<User | null>(null);
+    const [newPassword, setNewPassword] = useState('');
 
     useEffect(() => {
         const fetchUsers = async () => {
@@ -36,6 +40,32 @@ export default function UserTable() {
             setUsers(users.filter(user => user.id !== userId)); // Update state after deletion
         } catch (err) {
             setError('Failed to delete user.');
+        }
+    };
+
+    const handleOpenModal = (user: User) => {
+        setSelectedUser(user);
+        setShowModal(true);
+    };
+
+    const handleCloseModal = () => {
+        setShowModal(false);
+        setSelectedUser(null);
+        setNewPassword('');
+    };
+
+    const handleChangePassword = async () => {
+        if (selectedUser) {
+            try {
+                await axios.post(`${config.apiUrl}/users/change-password`, {
+                    username: selectedUser.username,
+                    newPassword: newPassword, // Updated key to match API requirement
+                });
+                alert('Password changed successfully!');
+                handleCloseModal();
+            } catch (err) {
+                setError('Failed to change password.');
+            }
         }
     };
 
@@ -80,11 +110,95 @@ export default function UserTable() {
                                                 style={{ width: '16px', height: '16px' }}
                                             /> {/* Use the SVG as an image */}
                                         </button>
+                                        <button
+                                            onClick={() => handleOpenModal(user)}
+                                            style={{
+                                                background: 'none',
+                                                border: 'none',
+                                                cursor: 'pointer',
+                                                marginLeft: '10px',
+                                            }}
+                                        >
+                                            <img
+                                                src={settingsIcon}
+                                                alt="Settings"
+                                                style={{ width: '16px', height: '16px' }}
+                                            />
+                                        </button>
                                     </td> 
                                 </tr>
                             ))}
                         </tbody>
                     </table>
+                </div>
+            )}
+            {showModal && (
+                <div
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                    }}
+                >
+                    <div
+                        style={{
+                            backgroundColor: '#fff',
+                            padding: '20px',
+                            borderRadius: '8px',
+                            width: '400px',
+                            textAlign: 'center',
+                        }}
+                    >
+                        <h3>Change Password for {selectedUser?.nombre} {selectedUser?.apellido}</h3>
+                        <input
+                            type="password"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            placeholder="New Password"
+                            style={{
+                                width: '100%',
+                                padding: '10px',
+                                margin: '10px 0',
+                                borderRadius: '4px',
+                                border: '1px solid #ddd',
+                            }}
+                        />
+                        <div style={{ marginTop: '20px' }}>
+                            <button
+                                onClick={handleChangePassword}
+                                style={{
+                                    padding: '10px 20px',
+                                    backgroundColor: '#4CAF50',
+                                    color: '#fff',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                    marginRight: '10px',
+                                }}
+                            >
+                                Save
+                            </button>
+                            <button
+                                onClick={handleCloseModal}
+                                style={{
+                                    padding: '10px 20px',
+                                    backgroundColor: '#f44336',
+                                    color: '#fff',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                }}
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
