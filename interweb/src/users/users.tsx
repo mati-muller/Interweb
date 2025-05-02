@@ -10,6 +10,7 @@ interface User {
     nombre: string;
     apellido: string;
     username: string; // Added username field
+    procesos?: string[]; // Added procesos field
 }
 
 export default function UserTable() {
@@ -27,7 +28,11 @@ export default function UserTable() {
         const fetchUsers = async () => {
             try {
                 const response = await axios.get<User[]>(`${config.apiUrl}/users/data`);
-                setUsers(response.data);
+                const usersWithProcesses = response.data.map(user => ({
+                    ...user,
+                    procesos: typeof user.procesos === 'string' ? JSON.parse(user.procesos || '[]') : [], // Ensure procesos is parsed correctly
+                }));
+                setUsers(usersWithProcesses);
                 setLoading(false);
             } catch (err) {
                 setError('Failed to fetch user data.');
@@ -75,6 +80,7 @@ export default function UserTable() {
 
     const handleOpenProcessModal = (user: User) => {
         setSelectedUser(user);
+        setSelectedProcesses(user.procesos || []); // Pre-select processes from API
         setShowProcessModal(true);
     };
 
