@@ -22,6 +22,33 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return user ? <>{children}</> : <Navigate to="/login" />;
 };
 
+// Update the synchronization logic to include 'inventoryData'
+window.addEventListener('storage', (event) => {
+  if (event.key === 'user' || event.key === 'inventoryData') {
+    const value = event.newValue;
+    if (value) {
+      localStorage.setItem(event.key, value);
+    }
+  }
+});
+
+function syncLocalStorage() {
+  const user = localStorage.getItem('user');
+  const inventoryData = localStorage.getItem('inventoryData');
+  if (user) {
+    localStorage.setItem('user', user);
+  }
+  if (inventoryData) {
+    localStorage.setItem('inventoryData', inventoryData);
+  }
+}
+
+// Call this function when opening a new tab or window
+function openInNewTab(url: string): void {
+  syncLocalStorage();
+  window.open(url, '_blank');
+}
+
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );

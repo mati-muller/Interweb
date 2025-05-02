@@ -25,25 +25,25 @@ export default function Homeprocesos() {
             />
             <h1 style={styles.title}>Menú Principal</h1>
             <div style={styles.grid}>
-                <button style={styles.button} onClick={() => navigate('/encolado')}>
+                <a href="/encolado" style={{ ...styles.button, textDecoration: 'none' }}>
                     Encolado
-                </button>
-                <button style={styles.button} onClick={() => navigate('/trozado')}>
+                </a>
+                <a href="/trozado" style={{ ...styles.button, textDecoration: 'none' }}>
                     Trozado
-                </button>
-                <button style={styles.button} onClick={() => navigate('/troquelado')}>
+                </a>
+                <a href="/troquelado" style={{ ...styles.button, textDecoration: 'none' }}>
                     Troquelado
-                </button>
-                <button style={styles.button} onClick={() => navigate('/multiple')}>
+                </a>
+                <a href="/multiple" style={{ ...styles.button, textDecoration: 'none' }}>
                     Múltiple
-                </button>
-                <button style={styles.button} onClick={() => navigate('/pegado')}>
+                </a>
+                <a href="/pegado" style={{ ...styles.button, textDecoration: 'none' }}>
                     Pegado
-                </button>
+                </a>
             </div>
-            <button style={{ ...styles.button, ...styles.logoutButton }} onClick={handleLogout}>
-                Cerrar Sesión
-            </button>
+            <a href="/home" style={{ ...styles.button, ...styles.logoutButton , textDecoration: 'none' }}>
+                    Volver a pagina principal
+                </a>
         </div>
     );
 }

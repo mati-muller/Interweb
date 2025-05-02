@@ -26,6 +26,7 @@ export default function Home() {
         navigate('/login');
     };
 
+    // Updated styles to remove underline from links
     return (
         <div style={styles.container}>
             <img
@@ -35,18 +36,18 @@ export default function Home() {
             />
             <h1 style={styles.title}>Menú Principal</h1>
             <div style={styles.grid}>
-                <button style={styles.button} onClick={() => navigate('/inventario')}>
+                <a href="/inventario" style={{ ...styles.button, textDecoration: 'none' }}>
                     Ir a módulo de inventario
-                </button>
-                <button style={styles.button} onClick={() => navigate('/programa-produccion')}>
+                </a>
+                <a href="/programa-produccion" style={{ ...styles.button, textDecoration: 'none' }}>
                     Ir a módulo de programa de producción
-                </button>
-                <button style={styles.button} onClick={() => navigate('/edicion')}>
-                    Ir a módulo de edicion de programa de producción
-                </button>
-                <button style={styles.button} onClick={() => navigate('/users')}>
+                </a>
+                <a href="/edicion" style={{ ...styles.button, textDecoration: 'none' }}>
+                    Ir a módulo de edición de programa de producción
+                </a>
+                <a href="/users" style={{ ...styles.button, textDecoration: 'none' }}>
                     Ir a módulo de gestión de usuarios
-                </button>
+                </a>
             </div>
             <button style={{ ...styles.button, ...styles.logoutButton }} onClick={handleLogout}>
                 Cerrar Sesión
