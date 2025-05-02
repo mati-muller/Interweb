@@ -20,7 +20,7 @@ export default function UserTable() {
     const [showModal, setShowModal] = useState(false);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
     const [newPassword, setNewPassword] = useState('');
-    const procesos = ['Multiple1', 'Multiple2', 'Encolado1', 'Encolado2', 'Troqueladora Grande', 'Troqueladora Pequeña', 'Emplacado', 'Pegado','Plizado', 'Inventario','Trozado'];
+    const procesos = ['Multiple1', 'Multiple2', 'Encolado1', 'Encolado2', 'Troqueladora Grande', 'Troqueladora Chica', 'Emplacado', 'Pegado','Plizado', 'Inventario','Trozado'];
     const [selectedProcesses, setSelectedProcesses] = useState<string[]>([]);
     const [showProcessModal, setShowProcessModal] = useState(false);
 
