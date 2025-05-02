@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { config } from '../set/config'; // Import config
+import redTrashIcon from '../assets/red-trash-can-icon.svg'; // Updated path to src/assets/
 
 interface User {
     id: number;
@@ -29,6 +30,15 @@ export default function UserTable() {
         fetchUsers();
     }, []);
 
+    const handleDelete = async (userId: number) => {
+        try {
+            await axios.post(`${config.apiUrl}/users/delete`, { user_id: userId }); // Send POST request with user ID
+            setUsers(users.filter(user => user.id !== userId)); // Update state after deletion
+        } catch (err) {
+            setError('Failed to delete user.');
+        }
+    };
+
     return (
         <div style={{ padding: '20px' }}>
             <h2 style={{ marginBottom: '20px', color: '#333' }}>Lista de Usuarios</h2>
@@ -44,6 +54,7 @@ export default function UserTable() {
                                 <th style={{ padding: '10px', border: '1px solid #ddd' }}>ID</th>
                                 <th style={{ padding: '10px', border: '1px solid #ddd' }}>Nombre Completo</th>
                                 <th style={{ padding: '10px', border: '1px solid #ddd' }}>Username</th> {/* Added column */}
+                                <th style={{ padding: '10px', border: '1px solid #ddd' }}>Acciones</th> {/* Added column */}
                             </tr>
                         </thead>
                         <tbody>
@@ -54,6 +65,22 @@ export default function UserTable() {
                                         {`${user.nombre} ${user.apellido}`}
                                     </td>
                                     <td style={{ padding: '10px', border: '1px solid #ddd', textAlign: 'center' }}>{user.username}</td> {/* Added data */}
+                                    <td style={{ padding: '10px', border: '1px solid #ddd', textAlign: 'center' }}>
+                                        <button
+                                            onClick={() => handleDelete(user.id)}
+                                            style={{
+                                                background: 'none',
+                                                border: 'none',
+                                                cursor: 'pointer',
+                                            }}
+                                        >
+                                            <img
+                                                src={redTrashIcon}
+                                                alt="Delete"
+                                                style={{ width: '16px', height: '16px' }}
+                                            /> {/* Use the SVG as an image */}
+                                        </button>
+                                    </td> 
                                 </tr>
                             ))}
                         </tbody>
