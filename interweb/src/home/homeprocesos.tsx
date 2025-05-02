@@ -11,11 +11,6 @@ export default function Homeprocesos() {
         }
     }, [navigate]);
 
-    const handleLogout = () => {
-        localStorage.clear();
-        navigate('/login');
-    };
-
     return (
         <div style={styles.container}>
             <img
