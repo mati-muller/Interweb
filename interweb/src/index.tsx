@@ -14,7 +14,7 @@ import Edicion from './home/edicion';
 import Emplacado from './procesos/emplac';
 import ProcesosTable from './procesos/procesos';
 import Mult from './procesos/mult';
-
+import UserTable from './users/users';
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const user = localStorage.getItem('user'); // Ensure this checks for 'user'
   return user ? <>{children}</> : <Navigate to="/login" />;
@@ -114,6 +114,14 @@ root.render(
           element={
             <ProtectedRoute>
               <Mult />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/users"
+          element={
+            <ProtectedRoute>
+              <UserTable />
             </ProtectedRoute>
           }
         />
