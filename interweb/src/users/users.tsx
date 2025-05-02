@@ -3,6 +3,7 @@ import axios from 'axios';
 import { config } from '../set/config'; // Import config
 import redTrashIcon from '../assets/red-trash-can-icon.svg'; // Updated path to src/assets/
 import settingsIcon from '../assets/settings-icon.svg'; // Import settings icon
+import editarIcon from '../assets/editar.svg'; // Import edit icon
 
 interface User {
     id: number;
@@ -18,6 +19,9 @@ export default function UserTable() {
     const [showModal, setShowModal] = useState(false);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
     const [newPassword, setNewPassword] = useState('');
+    const procesos = ['Multiple1', 'Multiple2', 'Encolado1', 'Encolado2', 'Troqueladora Grande', 'Troqueladora Pequeña'];
+    const [selectedProcesses, setSelectedProcesses] = useState<string[]>([]);
+    const [showProcessModal, setShowProcessModal] = useState(false);
 
     useEffect(() => {
         const fetchUsers = async () => {
@@ -65,6 +69,39 @@ export default function UserTable() {
                 handleCloseModal();
             } catch (err) {
                 setError('Failed to change password.');
+            }
+        }
+    };
+
+    const handleOpenProcessModal = (user: User) => {
+        setSelectedUser(user);
+        setShowProcessModal(true);
+    };
+
+    const handleCloseProcessModal = () => {
+        setShowProcessModal(false);
+        setSelectedProcesses([]);
+    };
+
+    const handleProcessSelection = (process: string) => {
+        setSelectedProcesses((prev) =>
+            prev.includes(process)
+                ? prev.filter((p) => p !== process)
+                : [...prev, process]
+        );
+    };
+
+    const handleSaveProcesses = async () => {
+        if (selectedUser) {
+            try {
+                await axios.post(`${config.apiUrl}/users/procesos`, {
+                    user_id: selectedUser.id,
+                    procesos: selectedProcesses,
+                });
+                alert('Processes added successfully!');
+                handleCloseProcessModal();
+            } catch (err) {
+                setError('Failed to add processes.');
             }
         }
     };
@@ -125,13 +162,29 @@ export default function UserTable() {
                                                 style={{ width: '16px', height: '16px' }}
                                             />
                                         </button>
-                                    </td> 
+                                        <button
+                                            onClick={() => handleOpenProcessModal(user)}
+                                            style={{
+                                                background: 'none',
+                                                border: 'none',
+                                                cursor: 'pointer',
+                                                marginLeft: '10px',
+                                            }}
+                                        >
+                                            <img
+                                                src={editarIcon}
+                                                alt="Edit"
+                                                style={{ width: '16px', height: '16px' }}
+                                            />
+                                        </button>
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
                 </div>
             )}
+
             {showModal && (
                 <div
                     style={{
@@ -152,6 +205,8 @@ export default function UserTable() {
                             padding: '20px',
                             borderRadius: '8px',
                             width: '400px',
+                            maxHeight: '80%',
+                            overflowY: 'auto',
                             textAlign: 'center',
                         }}
                     >
@@ -186,6 +241,78 @@ export default function UserTable() {
                             </button>
                             <button
                                 onClick={handleCloseModal}
+                                style={{
+                                    padding: '10px 20px',
+                                    backgroundColor: '#f44336',
+                                    color: '#fff',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                }}
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showProcessModal && (
+                <div
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                    }}
+                >
+                    <div
+                        style={{
+                            backgroundColor: '#fff',
+                            padding: '20px',
+                            borderRadius: '8px',
+                            width: '400px',
+                            maxHeight: '80%',
+                            overflowY: 'auto',
+                            textAlign: 'center',
+                        }}
+                    >
+                        <h3>Select Processes for {selectedUser?.nombre} {selectedUser?.apellido}</h3>
+                        <div style={{ textAlign: 'left', margin: '10px 0', maxHeight: '300px', overflowY: 'auto' }}> {/* Added scrollable container */}
+                            {procesos.map((process) => (
+                                <div key={process} style={{ marginBottom: '10px' }}>
+                                    <label>
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedProcesses.includes(process)}
+                                            onChange={() => handleProcessSelection(process)}
+                                        />
+                                        {process}
+                                    </label>
+                                </div>
+                            ))}
+                        </div>
+                        <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'space-between' }}> {/* Adjusted button layout */}
+                            <button
+                                onClick={handleSaveProcesses}
+                                style={{
+                                    padding: '10px 20px',
+                                    backgroundColor: '#4CAF50',
+                                    color: '#fff',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                }}
+                            >
+                                Save
+                            </button>
+                            <button
+                                onClick={handleCloseProcessModal}
                                 style={{
                                     padding: '10px 20px',
                                     backgroundColor: '#f44336',
