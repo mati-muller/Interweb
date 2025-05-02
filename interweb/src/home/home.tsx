@@ -44,7 +44,7 @@ export default function Home() {
                 <button style={styles.button} onClick={() => navigate('/edicion')}>
                     Ir a módulo de edicion de programa de producción
                 </button>
-                <button style={styles.button} onClick={() => navigate('/gestion-usuarios')}>
+                <button style={styles.button} onClick={() => navigate('/users')}>
                     Ir a módulo de gestión de usuarios
                 </button>
             </div>
