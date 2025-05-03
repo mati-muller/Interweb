@@ -16,6 +16,7 @@ import Emplacado from './procesos/emplac';
 import ProcesosTable from './procesos/procesos';
 import Mult from './procesos/mult';
 import UserTable from './users/users';
+import Pegado from './procesos/pegado';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const user = localStorage.getItem('user'); // Ensure this checks for 'user'
@@ -87,6 +88,14 @@ root.render(
           element={
             <ProtectedRoute>
               <Encol />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/pegado"
+          element={
+            <ProtectedRoute>
+              <Pegado />
             </ProtectedRoute>
           }
         />

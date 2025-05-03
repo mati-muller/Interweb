@@ -35,6 +35,9 @@ export default function Homeprocesos() {
                 <a href="/pegado" style={{ ...styles.button, textDecoration: 'none' }}>
                     Pegado
                 </a>
+                <a href="/emplacado" style={{ ...styles.button, textDecoration: 'none' }}>
+                    Emplacado
+                </a>
             </div>
             <a href="/home" style={{ ...styles.button, ...styles.logoutButton , textDecoration: 'none' }}>
                     Volver a pagina principal
