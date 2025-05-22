@@ -17,7 +17,10 @@ import ProcesosTable from './procesos/procesos';
 import Mult from './procesos/mult';
 import UserTable from './users/users';
 import Pegado from './procesos/pegado';
-
+import EditTrozado from './procesos/edit/editTroz';
+import EditTroq from './procesos/edit/editTroq';
+import EditEncolado2 from './procesos/edit/editencol2';
+import EditMult from './procesos/edit/editMult';
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const user = localStorage.getItem('user'); // Ensure this checks for 'user'
   return user ? <>{children}</> : <Navigate to="/login" />;
@@ -128,6 +131,22 @@ root.render(
           element={
             <ProtectedRoute>
               <EditEncolado />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/edit-trozado"
+          element={
+            <ProtectedRoute>
+              <EditTrozado />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/edit-troquelado"
+          element={
+            <ProtectedRoute>
+              <EditTroq />
             </ProtectedRoute>
           }
         />

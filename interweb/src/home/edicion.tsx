@@ -28,13 +28,13 @@ export default function Edicion() {
                 <a href="/edit-encolado" style={{ ...styles.button, textDecoration: 'none' }}>
                     Encolado
                 </a>
-                <a href="/trozado" style={{ ...styles.button, textDecoration: 'none' }}>
+                <a href="/edit-trozado" style={{ ...styles.button, textDecoration: 'none' }}>
                     Trozado
                 </a>
-                <a href="/troquelado" style={{ ...styles.button, textDecoration: 'none' }}>
+                <a href="/edit-troquelado" style={{ ...styles.button, textDecoration: 'none' }}>
                     Troquelado
                 </a>
-                <a href="/pegado" style={{ ...styles.button, textDecoration: 'none' }}>
+                <a href="/edit-pegado" style={{ ...styles.button, textDecoration: 'none' }}>
                     Pegado
                 </a>
             </div>
