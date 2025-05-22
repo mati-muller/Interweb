@@ -32,12 +32,13 @@ export default function Troz() {
     const [showModal, setShowModal] = useState(false);
     const [selectedItem, setSelectedItem] = useState<DataItem | null>(null);
     const [desiredQuantity, setDesiredQuantity] = useState('');
-    const [selectedItems, setSelectedItems] = useState<DataItem[]>([]);
+    const [selectedItems, setSelectedItems] = useState<DataItem[]>([]); // Lista única para Pegado
     const [searchQuery, setSearchQuery] = useState(''); // State for search query
     const [placasFields, setPlacasFields] = useState<string[]>(['']); // Dynamic fields for Placas
     const [placasUsadasFields, setPlacasUsadasFields] = useState<string[]>(['']); // Dynamic fields for Placas Usadas
     const [alertModalVisible, setAlertModalVisible] = useState(false); // State for alert modal visibility
     const [alertMessage, setAlertMessage] = useState(''); // State for alert message
+    const [sinConsumoPlacas, setSinConsumoPlacas] = useState(false); // State for "sin consumo de placas", por defecto desmarcado
 
     const fetchData = () => {
         const apiUrl = `${API_BASE_URL}/procesos/pendientes-trozado`;
@@ -47,10 +48,10 @@ export default function Troz() {
                 if (Array.isArray(response.data)) {
                     const transformedData = response.data.map((item) => ({
                         ...item,
-                        Placas: typeof item.Placas === 'string' ? JSON.parse(item.Placas) : item.Placas, // Parse only if it's a string
+                        Placas: typeof item.Placas === 'string' ? JSON.parse(item.Placas) : item.Placas,
                     }));
                     setData(transformedData);
-                    setOriginalData(transformedData); // Save original data
+                    setOriginalData(transformedData);
                 } else {
                     setError('Unexpected API response format.');
                 }
@@ -67,83 +68,84 @@ export default function Troz() {
         setDesiredQuantity(''); // Reset desired quantity
         setPlacasFields(item.Placas.map((placa) => placa.DesProd)); // Pre-fill all "Tipo Placa" fields with DesProd
         setPlacasUsadasFields(item.Placas.map(() => '')); // Reset all "Cantidad a usar" fields
+        setSinConsumoPlacas(false); // Asegura que el checkbox esté desmarcado al abrir el modal
         setShowModal(true);
     };
 
     useEffect(() => {
-        if (selectedItem && desiredQuantity !== '') {
+        if (selectedItem && desiredQuantity !== '' && !sinConsumoPlacas) {
             const updatedPlacasUsadas = selectedItem.Placas.map((placa, index) => {
                 const currentValue = placasUsadasFields[index];
-                return currentValue !== '' ? currentValue : (parseFloat(desiredQuantity) * placa.CantMat).toFixed(2);
-            }); // Actualizar dinámicamente con el valor actual
+                return currentValue !== '' ? Math.ceil(Number(currentValue)).toString() : Math.ceil(parseFloat(desiredQuantity) * placa.CantMat).toString();
+            }); // Actualizar dinámicamente con el valor actual y redondear hacia arriba
             setPlacasUsadasFields(updatedPlacasUsadas);
         }
-    }, [desiredQuantity, selectedItem]); // Remover placasUsadasFields de las dependencias para evitar conflictos
+    }, [desiredQuantity, selectedItem, sinConsumoPlacas]); // Add sinConsumoPlacas to dependencies
 
     const handleDesiredQuantityChange = (value: string) => {
         setDesiredQuantity(value); // Actualizar el estado de desiredQuantity
         if (selectedItem) {
             const updatedPlacasUsadas = selectedItem.Placas.map((placa) =>
-                (parseFloat(value) * placa.CantMat).toFixed(2)
-            ); // Recalcular dinámicamente
+                Math.ceil(parseFloat(value) * placa.CantMat).toString()
+            ); // Recalcular dinámicamente y redondear hacia arriba
             setPlacasUsadasFields(updatedPlacasUsadas);
         }
     };
 
     const handleAddToSelected = () => {
         if (selectedItem && desiredQuantity) {
-            const inventoryData = JSON.parse(localStorage.getItem('inventoryData') || '[]');
-            const placasUsadas = placasUsadasFields.map((value, index) => 
-                Number(value || (parseFloat(desiredQuantity) * selectedItem.Placas[index].CantMat).toFixed(2))
-            ); // Usar el valor existente o calcular si está vacío
+            if (!sinConsumoPlacas) {
+                const inventoryData = JSON.parse(localStorage.getItem('inventoryData') || '[]');
+                const placasUsadas = placasUsadasFields.map((value, index) => 
+                    Math.ceil(Number(value || (parseFloat(desiredQuantity) * selectedItem.Placas[index].CantMat)))
+                );
 
-            // Check inventory for each placa
-            for (let i = 0; i < placasFields.length; i++) {
-                const placaName = placasFields[i];
-                const requiredQuantity = placasUsadas[i];
-                const inventoryItem = inventoryData.find((item: { placa: string }) => item.placa === placaName);
+                for (let i = 0; i < placasFields.length; i++) {
+                    const placaName = placasFields[i];
+                    const requiredQuantity = placasUsadas[i];
+                    const inventoryItem = inventoryData.find((item: { placa: string }) => item.placa === placaName);
 
-                if (!inventoryItem || inventoryItem.Cantidad < requiredQuantity) {
-                    setAlertMessage(`No hay suficiente inventario para la placa "${placaName}". Requerido: ${requiredQuantity}, Disponible: ${inventoryItem ? inventoryItem.Cantidad : 0}`);
-                    setAlertModalVisible(true); // Show alert modal
-                    return; // Stop if inventory is insufficient
+                    if (!inventoryItem || inventoryItem.cantidad < requiredQuantity) {
+                        setAlertMessage(`No hay suficiente inventario para la placa "${placaName}". Requerido: ${requiredQuantity}, Disponible: ${inventoryItem ? inventoryItem.cantidad : 0}`);
+                        setAlertModalVisible(true);
+                        return;
+                    }
                 }
+
+                placasFields.forEach((placaName, index) => {
+                    const inventoryItem = inventoryData.find((item: { placa: string }) => item.placa === placaName);
+                    if (inventoryItem) {
+                        inventoryItem.cantidad -= placasUsadas[index];
+                    }
+                });
+                localStorage.setItem('inventoryData', JSON.stringify(inventoryData));
             }
-
-            // Deduct used inventory
-            placasFields.forEach((placaName, index) => {
-                const inventoryItem = inventoryData.find((item: { placa: string }) => item.placa === placaName);
-                if (inventoryItem) {
-                    inventoryItem.Cantidad -= placasUsadas[index];
-                }
-            });
-            localStorage.setItem('inventoryData', JSON.stringify(inventoryData));
 
             const updatedItem = {
                 ...selectedItem,
                 CANT_A_FABRICAR: parseInt(desiredQuantity, 10),
-                placasUsadas,
-                transformedPlacas: placasFields,
+                placasUsadas: sinConsumoPlacas ? [] : placasUsadasFields.map((value, index) => Math.ceil(Number(value))),
+                transformedPlacas: sinConsumoPlacas ? [] : placasFields,
             };
+
             setSelectedItems((prev) => [...prev, updatedItem]);
-            setData((prev) => prev.filter((item) => item.ID !== selectedItem.ID));
             setShowModal(false);
             setDesiredQuantity('');
         }
     };
-
+    
     const handleRemoveFromSelected = (index: number) => {
         setSelectedItems((prev) => {
             const removedItem = prev[index];
             setData((prevData) => {
                 const updatedData = prevData.some((item) => item.ID === removedItem.ID)
-                    ? prevData // If the item already exists, do not add it again
+                    ? prevData
                     : [...prevData, removedItem];
                 return updatedData.sort((a, b) => {
                     const originalIndexA = originalData.findIndex((item) => item.ID === a.ID);
                     const originalIndexB = originalData.findIndex((item) => item.ID === b.ID);
                     return originalIndexA - originalIndexB;
-                }); // Restore original order
+                });
             });
             return prev.filter((_, i) => i !== index);
         });
@@ -154,26 +156,24 @@ export default function Troz() {
             alert('No items selected.');
             return;
         }
-
         const payload = selectedItems.map((item) => ({
             ID: item.ID,
             CANT_A_FABRICAR: item.CANT_A_FABRICAR,
-            transformedPlacas: item.transformedPlacas || [], // Include transformedPlacas
-            placasUsadas: item.placasUsadas || [], // Include placasUsadas
+            transformedPlacas: item.transformedPlacas ?? [],
+            placasUsadas: item.placasUsadas ?? [],
         }));
-        console.log('Submitting selected items:', payload); // Log the payload for debugging
-
-        axios.post(`${API_BASE_URL}/app/update-trozado`, { items: payload }, {
+        const endpoint = `${API_BASE_URL}/app/update-trozado`;
+        axios.post(endpoint, { items: payload }, {
             headers: { 'Content-Type': 'application/json' }
         })
             .then(() => {
-                alert('Selected items submitted successfully!');
+                alert('Elementos seleccionados para Trozado subidos correctamente!');
                 setSelectedItems([]);
                 fetchData();
             })
             .catch((error) => {
-                console.error('Error submitting selected items:', error);
-                alert('Failed to submit selected items.');
+                console.error('Error al subir elementos para Trozado:', error);
+                alert('Error al subir elementos para Trozado.');
             });
     };
 
@@ -187,8 +187,8 @@ export default function Troz() {
     };
 
     const moveItemDown = (index: number) => {
-        if (index === selectedItems.length - 1) return;
         setSelectedItems((prev) => {
+            if (index === prev.length - 1) return prev;
             const updated = [...prev];
             [updated[index], updated[index + 1]] = [updated[index + 1], updated[index]];
             return updated;
@@ -214,8 +214,50 @@ export default function Troz() {
         });
     };
 
+    const handleSinConsumoPlacasChange = (checked: boolean) => {
+        setSinConsumoPlacas(checked);
+        if (checked) {
+            setPlacasFields(['']); // Clear placas fields
+            setPlacasUsadasFields(['']); // Clear placas quantities
+        } else if (selectedItem) {
+            setPlacasFields(selectedItem.Placas.map((placa) => placa.DesProd)); // Refill placas fields
+            setPlacasUsadasFields(selectedItem.Placas.map(() => '')); // Reset quantities
+        }
+    };
+
     useEffect(() => {
         fetchData();
+    }, []);
+
+    useEffect(() => {
+        const fetchTrozado = async () => {
+            setLoading(true);
+            try {
+                const res = await axios.get(`${API_BASE_URL}/app/trozado`);
+                const parsePlacas = (arr: any[]) => arr.map((item) => {
+                    let transformedPlacas: string[] = [];
+                    let placasUsadas: number[] = [];
+                    try {
+                        transformedPlacas = item.PLACAS_A_USAR ? JSON.parse(item.PLACAS_A_USAR) : [];
+                    } catch { transformedPlacas = []; }
+                    try {
+                        placasUsadas = item.CANTIDAD_PLACAS ? JSON.parse(item.CANTIDAD_PLACAS) : [];
+                    } catch { placasUsadas = []; }
+                    return {
+                        ...item,
+                        CANT_A_FABRICAR: item.CANT_A_FABRICAR ?? 0,
+                        transformedPlacas,
+                        placasUsadas,
+                    };
+                });
+                setSelectedItems(parsePlacas(res.data));
+            } catch (err) {
+                setError('Error al obtener datos de trozado');
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchTrozado();
     }, []);
 
     const filteredData = data.filter((item) =>
@@ -268,64 +310,31 @@ export default function Troz() {
             />
             {selectedItems.length > 0 && (
                 <div style={{ marginBottom: '20px', padding: '15px', border: '1px solid #ddd', borderRadius: '5px', backgroundColor: '#f9f9f9' }}>
-                    <h3 style={{ marginBottom: '15px', color: '#333' }}>Elementos Seleccionados</h3>
+                    <h3 style={{ marginBottom: '15px', color: '#333' }}>Elementos Seleccionados - Trozado</h3>
                     <ul style={{ listStyleType: 'none', padding: 0 }}>
                         {selectedItems.map((item, index) => (
                             <li key={item.ID} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px', backgroundColor: '#fff', padding: '10px', borderRadius: '5px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}>
+                                <span style={{ marginRight: '10px', fontSize: '14px', fontWeight: 'bold' }}>
+                                    {index + 1}.
+                                </span>
                                 <span style={{ flex: 1, fontSize: '14px' }}>
                                     <strong>Producto:</strong> {item.DETPROD} | <strong>Cliente:</strong> {item.NOMAUX} | <strong>Cantidad:</strong> {item.CANT_A_FABRICAR}
                                 </span>
                                 <button
-                                    style={{
-                                        marginRight: '5px',
-                                        padding: '5px 10px',
-                                        backgroundColor: '#4caf50',
-                                        color: '#fff',
-                                        border: 'none',
-                                        borderRadius: '5px',
-                                        cursor: 'pointer',
-                                    }}
+                                    style={{ marginRight: '5px', padding: '5px 10px', backgroundColor: '#4caf50', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
                                     onClick={() => moveItemUp(index)}
                                     disabled={index === 0}
-                                >
-                                    ↑
-                                </button>
+                                >↑</button>
                                 <button
-                                    style={{
-                                        marginRight: '5px',
-                                        padding: '5px 10px',
-                                        backgroundColor: '#4caf50',
-                                        color: '#fff',
-                                        border: 'none',
-                                        borderRadius: '5px',
-                                        cursor: 'pointer',
-                                    }}
+                                    style={{ marginRight: '5px', padding: '5px 10px', backgroundColor: '#4caf50', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
                                     onClick={() => moveItemDown(index)}
                                     disabled={index === selectedItems.length - 1}
-                                >
-                                    ↓
-                                </button>
+                                >↓</button>
                                 <button
-                                    style={{
-                                        padding: '5px 10px',
-                                        backgroundColor: '#ff4c4c',
-                                        color: '#fff',
-                                        border: 'none',
-                                        borderRadius: '5px',
-                                        cursor: 'pointer',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                    }}
+                                    style={{ padding: '5px 10px', backgroundColor: '#ff4c4c', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                     onClick={() => handleRemoveFromSelected(index)}
                                 >
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        viewBox="0 0 24 24"
-                                        fill="currentColor"
-                                        width="16px"
-                                        height="16px"
-                                    >
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16px" height="16px">
                                         <path d="M3 6h18v2H3V6zm2 3h14v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V9zm5 2v8h2v-8H8zm4 0v8h2v-8h-2zM9 4h6v2H9V4z" />
                                     </svg>
                                 </button>
@@ -333,20 +342,10 @@ export default function Troz() {
                         ))}
                     </ul>
                     <button
-                        style={{
-                            marginTop: '15px',
-                            padding: '10px',
-                            backgroundColor: '#c8a165', // Updated color
-                            color: '#fff',
-                            border: 'none',
-                            borderRadius: '5px',
-                            cursor: 'pointer',
-                            width: '100%',
-                            fontSize: '16px',
-                        }}
+                        style={{ marginTop: '15px', padding: '10px', backgroundColor: '#c8a165', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer', width: '100%', fontSize: '16px' }}
                         onClick={handleSubmitSelected}
                     >
-                        Subir Seleccionados
+                        Subir Seleccionados - Trozado
                     </button>
                 </div>
             )}
@@ -477,41 +476,51 @@ export default function Troz() {
                                 />
                             </div>
                         ))}
-                        <button
-                            onClick={addPlacaField}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                padding: '10px 15px',
-                                backgroundColor: '#228B22',
-                                color: '#fff',
-                                border: 'none',
-                                borderRadius: '5px',
-                                cursor: 'pointer',
-                                fontSize: '16px',
-                                marginBottom: '15px',
-                            }}
-                        >
-                            <span
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '15px' }}>
+                            <button
+                                onClick={addPlacaField}
                                 style={{
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    width: '20px', // Reduced width
-                                    height: '20px', // Reduced height
-                                    backgroundColor: '#fff',
-                                    color: '#228B22',
-                                    fontWeight: 'bold',
-                                    borderRadius: '50%',
-                                    marginRight: '8px',
-                                    fontSize: '14px', // Adjusted font size for smaller circle
+                                    padding: '10px 15px',
+                                    backgroundColor: '#228B22',
+                                    color: '#fff',
+                                    border: 'none',
+                                    borderRadius: '5px',
+                                    cursor: 'pointer',
+                                    fontSize: '16px',
                                 }}
                             >
-                                +
-                            </span>
-                            Agregar Placa
-                        </button>
+                                <span
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        width: '20px', // Reduced width
+                                        height: '20px', // Reduced height
+                                        backgroundColor: '#fff',
+                                        color: '#228B22',
+                                        fontWeight: 'bold',
+                                        borderRadius: '50%',
+                                        marginRight: '8px',
+                                        fontSize: '14px', // Adjusted font size for smaller circle
+                                    }}
+                                >
+                                    +
+                                </span>
+                                Agregar Placa
+                            </button>
+                            <label style={{ fontSize: '16px', color: '#333', display: 'flex', alignItems: 'center' }}>
+                                <input
+                                    type="checkbox"
+                                    checked={sinConsumoPlacas}
+                                    onChange={(e) => handleSinConsumoPlacasChange(e.target.checked)}
+                                    style={{ marginRight: '10px' }}
+                                />
+                                Sin consumo de placas
+                            </label>
+                        </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                             <button
                                 onClick={handleAddToSelected}
