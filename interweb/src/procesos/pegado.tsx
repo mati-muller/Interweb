@@ -30,15 +30,15 @@ export default function Pegado() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [showModal, setShowModal] = useState(false);
-    const [selectedItem, setSelectedItem] = useState<DataItem | null>(null); // State for selected item
+    const [selectedItem, setSelectedItem] = useState<DataItem | null>(null);
     const [desiredQuantity, setDesiredQuantity] = useState('');
-    const [selectedItems, setSelectedItems] = useState<DataItem[]>([]);
+    const [selectedItems, setSelectedItems] = useState<DataItem[]>([]); // Lista única para Pegado
     const [searchQuery, setSearchQuery] = useState(''); // State for search query
     const [placasFields, setPlacasFields] = useState<string[]>(['']); // Dynamic fields for Placas
     const [placasUsadasFields, setPlacasUsadasFields] = useState<string[]>(['']); // Dynamic fields for Placas Usadas
     const [alertModalVisible, setAlertModalVisible] = useState(false); // State for alert modal visibility
     const [alertMessage, setAlertMessage] = useState(''); // State for alert message
-    const [sinConsumoPlacas, setSinConsumoPlacas] = useState(false); // State for "sin consumo de placas"
+    const [sinConsumoPlacas, setSinConsumoPlacas] = useState(false); // State for "sin consumo de placas", por defecto desmarcado
 
     const fetchData = () => {
         const apiUrl = `${API_BASE_URL}/procesos/pendientes-pegado`;
@@ -68,6 +68,7 @@ export default function Pegado() {
         setDesiredQuantity(''); // Reset desired quantity
         setPlacasFields(item.Placas.map((placa) => placa.DesProd)); // Pre-fill all "Tipo Placa" fields with DesProd
         setPlacasUsadasFields(item.Placas.map(() => '')); // Reset all "Cantidad a usar" fields
+        setSinConsumoPlacas(false); // Asegura que el checkbox esté desmarcado al abrir el modal
         setShowModal(true);
     };
 
@@ -75,8 +76,8 @@ export default function Pegado() {
         if (selectedItem && desiredQuantity !== '' && !sinConsumoPlacas) {
             const updatedPlacasUsadas = selectedItem.Placas.map((placa, index) => {
                 const currentValue = placasUsadasFields[index];
-                return currentValue !== '' ? currentValue : (parseFloat(desiredQuantity) * placa.CantMat).toFixed(2);
-            }); // Actualizar dinámicamente con el valor actual
+                return currentValue !== '' ? Math.ceil(Number(currentValue)).toString() : Math.ceil(parseFloat(desiredQuantity) * placa.CantMat).toString();
+            }); // Actualizar dinámicamente con el valor actual y redondear hacia arriba
             setPlacasUsadasFields(updatedPlacasUsadas);
         }
     }, [desiredQuantity, selectedItem, sinConsumoPlacas]); // Add sinConsumoPlacas to dependencies
@@ -85,8 +86,8 @@ export default function Pegado() {
         setDesiredQuantity(value); // Actualizar el estado de desiredQuantity
         if (selectedItem) {
             const updatedPlacasUsadas = selectedItem.Placas.map((placa) =>
-                (parseFloat(value) * placa.CantMat).toFixed(2)
-            ); // Recalcular dinámicamente
+                Math.ceil(parseFloat(value) * placa.CantMat).toString()
+            ); // Recalcular dinámicamente y redondear hacia arriba
             setPlacasUsadasFields(updatedPlacasUsadas);
         }
     };
@@ -96,7 +97,7 @@ export default function Pegado() {
             if (!sinConsumoPlacas) {
                 const inventoryData = JSON.parse(localStorage.getItem('inventoryData') || '[]');
                 const placasUsadas = placasUsadasFields.map((value, index) => 
-                    Number(value || (parseFloat(desiredQuantity) * selectedItem.Placas[index].CantMat).toFixed(2))
+                    Math.ceil(Number(value || (parseFloat(desiredQuantity) * selectedItem.Placas[index].CantMat)))
                 );
 
                 for (let i = 0; i < placasFields.length; i++) {
@@ -104,8 +105,8 @@ export default function Pegado() {
                     const requiredQuantity = placasUsadas[i];
                     const inventoryItem = inventoryData.find((item: { placa: string }) => item.placa === placaName);
 
-                    if (!inventoryItem || inventoryItem.Cantidad < requiredQuantity) {
-                        setAlertMessage(`No hay suficiente inventario para la placa "${placaName}". Requerido: ${requiredQuantity}, Disponible: ${inventoryItem ? inventoryItem.Cantidad : 0}`);
+                    if (!inventoryItem || inventoryItem.cantidad < requiredQuantity) {
+                        setAlertMessage(`No hay suficiente inventario para la placa "${placaName}". Requerido: ${requiredQuantity}, Disponible: ${inventoryItem ? inventoryItem.cantidad : 0}`);
                         setAlertModalVisible(true);
                         return;
                     }
@@ -114,7 +115,7 @@ export default function Pegado() {
                 placasFields.forEach((placaName, index) => {
                     const inventoryItem = inventoryData.find((item: { placa: string }) => item.placa === placaName);
                     if (inventoryItem) {
-                        inventoryItem.Cantidad -= placasUsadas[index];
+                        inventoryItem.cantidad -= placasUsadas[index];
                     }
                 });
                 localStorage.setItem('inventoryData', JSON.stringify(inventoryData));
@@ -123,29 +124,28 @@ export default function Pegado() {
             const updatedItem = {
                 ...selectedItem,
                 CANT_A_FABRICAR: parseInt(desiredQuantity, 10),
-                placasUsadas: sinConsumoPlacas ? [] : placasUsadasFields.map(Number),
+                placasUsadas: sinConsumoPlacas ? [] : placasUsadasFields.map((value, index) => Math.ceil(Number(value))),
                 transformedPlacas: sinConsumoPlacas ? [] : placasFields,
             };
 
             setSelectedItems((prev) => [...prev, updatedItem]);
-
             setShowModal(false);
             setDesiredQuantity('');
         }
     };
-
+    
     const handleRemoveFromSelected = (index: number) => {
         setSelectedItems((prev) => {
             const removedItem = prev[index];
             setData((prevData) => {
                 const updatedData = prevData.some((item) => item.ID === removedItem.ID)
-                    ? prevData // If the item already exists, do not add it again
+                    ? prevData
                     : [...prevData, removedItem];
                 return updatedData.sort((a, b) => {
                     const originalIndexA = originalData.findIndex((item) => item.ID === a.ID);
                     const originalIndexB = originalData.findIndex((item) => item.ID === b.ID);
                     return originalIndexA - originalIndexB;
-                }); // Restore original order
+                });
             });
             return prev.filter((_, i) => i !== index);
         });
@@ -156,27 +156,24 @@ export default function Pegado() {
             alert('No items selected.');
             return;
         }
-
         const payload = selectedItems.map((item) => ({
             ID: item.ID,
             CANT_A_FABRICAR: item.CANT_A_FABRICAR,
-            transformedPlacas: item.transformedPlacas || [], // Include transformedPlacas
-            placasUsadas: item.placasUsadas || [], // Include placasUsadas
+            transformedPlacas: item.transformedPlacas ?? [],
+            placasUsadas: item.placasUsadas ?? [],
         }));
-
         const endpoint = `${API_BASE_URL}/app/update-pegado`;
-
         axios.post(endpoint, { items: payload }, {
             headers: { 'Content-Type': 'application/json' }
         })
             .then(() => {
-                alert(`Selected items submitted successfully!`);
+                alert('Elementos seleccionados para Pegado subidos correctamente!');
                 setSelectedItems([]);
                 fetchData();
             })
             .catch((error) => {
-                console.error(`Error submitting selected items:`, error);
-                alert(`Failed to submit selected items.`);
+                console.error('Error al subir elementos para Pegado:', error);
+                alert('Error al subir elementos para Pegado.');
             });
     };
 
@@ -232,14 +229,41 @@ export default function Pegado() {
         fetchData();
     }, []);
 
+    useEffect(() => {
+        const fetchPegado = async () => {
+            setLoading(true);
+            try {
+                const res = await axios.get(`${API_BASE_URL}/app/pegado`);
+                // Parse campos si es necesario
+                const parsePlacas = (arr: any[]) => arr.map((item) => {
+                    let transformedPlacas: string[] = [];
+                    let placasUsadas: number[] = [];
+                    try {
+                        transformedPlacas = item.PLACAS_A_USAR ? JSON.parse(item.PLACAS_A_USAR) : [];
+                    } catch { transformedPlacas = []; }
+                    try {
+                        placasUsadas = item.CANTIDAD_PLACAS ? JSON.parse(item.CANTIDAD_PLACAS) : [];
+                    } catch { placasUsadas = []; }
+                    return {
+                        ...item,
+                        CANT_A_FABRICAR: item.CANT_A_FABRICAR ?? 0,
+                        transformedPlacas,
+                        placasUsadas,
+                    };
+                });
+                setSelectedItems(parsePlacas(res.data));
+            } catch (err) {
+                setError('Error al obtener datos de pegado');
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchPegado();
+    }, []);
+
     const filteredData = data.filter((item) =>
         item.NOMAUX.toLowerCase().includes(searchQuery.toLowerCase())
     ); // Filter data based on search query
-
-    const handleRowClick = (item: DataItem) => {
-        setSelectedItem(item);
-        setShowModal(true);
-    }; // Function to handle row selection
 
     return (
         <div style={{ padding: '20px' }}>
@@ -287,7 +311,7 @@ export default function Pegado() {
             />
             {selectedItems.length > 0 && (
                 <div style={{ marginBottom: '20px', padding: '15px', border: '1px solid #ddd', borderRadius: '5px', backgroundColor: '#f9f9f9' }}>
-                    <h3 style={{ marginBottom: '15px', color: '#333' }}>Elementos Seleccionados</h3>
+                    <h3 style={{ marginBottom: '15px', color: '#333' }}>Elementos Seleccionados - Pegado</h3>
                     <ul style={{ listStyleType: 'none', padding: 0 }}>
                         {selectedItems.map((item, index) => (
                             <li key={item.ID} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px', backgroundColor: '#fff', padding: '10px', borderRadius: '5px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}>
@@ -298,56 +322,20 @@ export default function Pegado() {
                                     <strong>Producto:</strong> {item.DETPROD} | <strong>Cliente:</strong> {item.NOMAUX} | <strong>Cantidad:</strong> {item.CANT_A_FABRICAR}
                                 </span>
                                 <button
-                                    style={{
-                                        marginRight: '5px',
-                                        padding: '5px 10px',
-                                        backgroundColor: '#4caf50',
-                                        color: '#fff',
-                                        border: 'none',
-                                        borderRadius: '5px',
-                                        cursor: 'pointer',
-                                    }}
+                                    style={{ marginRight: '5px', padding: '5px 10px', backgroundColor: '#4caf50', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
                                     onClick={() => moveItemUp(index)}
                                     disabled={index === 0}
-                                >
-                                    ↑
-                                </button>
+                                >↑</button>
                                 <button
-                                    style={{
-                                        marginRight: '5px',
-                                        padding: '5px 10px',
-                                        backgroundColor: '#4caf50',
-                                        color: '#fff',
-                                        border: 'none',
-                                        borderRadius: '5px',
-                                        cursor: 'pointer',
-                                    }}
+                                    style={{ marginRight: '5px', padding: '5px 10px', backgroundColor: '#4caf50', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
                                     onClick={() => moveItemDown(index)}
                                     disabled={index === selectedItems.length - 1}
-                                >
-                                    ↓
-                                </button>
+                                >↓</button>
                                 <button
-                                    style={{
-                                        padding: '5px 10px',
-                                        backgroundColor: '#ff4c4c',
-                                        color: '#fff',
-                                        border: 'none',
-                                        borderRadius: '5px',
-                                        cursor: 'pointer',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                    }}
+                                    style={{ padding: '5px 10px', backgroundColor: '#ff4c4c', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                     onClick={() => handleRemoveFromSelected(index)}
                                 >
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        viewBox="0 0 24 24"
-                                        fill="currentColor"
-                                        width="16px"
-                                        height="16px"
-                                    >
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16px" height="16px">
                                         <path d="M3 6h18v2H3V6zm2 3h14v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V9zm5 2v8h2v-8H8zm4 0v8h2v-8h-2zM9 4h6v2H9V4z" />
                                     </svg>
                                 </button>
@@ -355,20 +343,10 @@ export default function Pegado() {
                         ))}
                     </ul>
                     <button
-                        style={{
-                            marginTop: '15px',
-                            padding: '10px',
-                            backgroundColor: '#c8a165', // Updated color
-                            color: '#fff',
-                            border: 'none',
-                            borderRadius: '5px',
-                            cursor: 'pointer',
-                            width: '100%',
-                            fontSize: '16px',
-                        }}
+                        style={{ marginTop: '15px', padding: '10px', backgroundColor: '#c8a165', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer', width: '100%', fontSize: '16px' }}
                         onClick={handleSubmitSelected}
                     >
-                        Subir Seleccionados
+                        Subir Seleccionados - Pegado
                     </button>
                 </div>
             )}
@@ -395,7 +373,7 @@ export default function Pegado() {
                         </thead>
                         <tbody>
                             {filteredData.map((item) => (
-                                <tr key={item.ID} onClick={() => handleRowClick(item)}>
+                                <tr key={item.ID}>
                                     <td style={{ padding: '10px', border: '1px solid #ddd', textAlign: 'center' }}>
                                         <button
                                             style={{
@@ -624,3 +602,4 @@ export default function Pegado() {
         </div>
     );
 }
+
