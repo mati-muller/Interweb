@@ -64,13 +64,21 @@ const ReusableProcessComponent: React.FC<ReusableProcessComponentProps> = ({ pro
             CANTIDAD_PLACAS: row.CANTIDAD_PLACAS,
         });
 
-        // Pre-fill placas fields based on the row's data
-        const placasArray = row.PLACAS_A_USAR
-            ? row.PLACAS_A_USAR.replace(/\[|\]|"/g, '').split(',').map((placa) => placa.trim())
-            : [];
-        const placasUsadasArray = row.CANTIDAD_PLACAS
-            ? row.CANTIDAD_PLACAS.replace(/\[|\]|"/g, '').split(',').map((cantidad) => cantidad.trim())
-            : [];
+        // Pre-fill placas fields based on the row's data (robust JSON parse)
+        let placasArray: string[] = [];
+        let placasUsadasArray: string[] = [];
+        try {
+            const parsed = JSON.parse(row.PLACAS_A_USAR);
+            placasArray = Array.isArray(parsed) ? parsed.map(String) : [];
+        } catch {
+            placasArray = [];
+        }
+        try {
+            const parsed = JSON.parse(row.CANTIDAD_PLACAS);
+            placasUsadasArray = Array.isArray(parsed) ? parsed.map(String) : [];
+        } catch {
+            placasUsadasArray = [];
+        }
         setPlacasFields(placasArray);
         setPlacasUsadasFields(placasUsadasArray);
 
@@ -130,18 +138,17 @@ const ReusableProcessComponent: React.FC<ReusableProcessComponentProps> = ({ pro
     const handleSubmit = () => {
         if (!selectedRow) return;
 
-        // Update formData with the latest placasFields and placasUsadasFields
-        const updatedFormData = {
-            ...formData,
-            PLACAS_A_USAR: JSON.stringify(placasFields),
-            CANTIDAD_PLACAS: JSON.stringify(placasUsadasFields),
-        };
+        // Filtrar strings vacíos antes de enviar
+        const filteredPlacasFields = placasFields.filter((p) => p && p.trim() !== '');
+        const filteredPlacasUsadasFields = placasUsadasFields
+            .map((p) => p && p.trim() !== '' ? Number(p) : null)
+            .filter((p) => p !== null) as number[];
 
         const payload = {
             ID: selectedRow.ID,
-            CANT_A_FABRICAR: parseInt(updatedFormData.CANT_A_FABRICAR, 10),
-            PLACAS_A_USAR: updatedFormData.PLACAS_A_USAR,
-            CANTIDAD_PLACAS: updatedFormData.CANTIDAD_PLACAS,
+            CANT_A_FABRICAR: parseInt(formData.CANT_A_FABRICAR, 10),
+            transformedPlacas: filteredPlacasFields,
+            placasUsadas: filteredPlacasUsadasFields,
         };
 
         axios.post(`${API_BASE_URL}/edit-${proceso}`, payload)
@@ -156,8 +163,14 @@ const ReusableProcessComponent: React.FC<ReusableProcessComponentProps> = ({ pro
     };
 
     const handleAddPlaca = () => {
-        setPlacasFields((prev) => [...prev, '']);
-        setPlacasUsadasFields((prev) => [...prev, '']);
+        setPlacasFields((prev) => {
+            const filtered = prev.filter((p) => p && p.trim() !== '');
+            return [...filtered, ''];
+        });
+        setPlacasUsadasFields((prev) => {
+            const filtered = prev.filter((p) => p && p.trim() !== '');
+            return [...filtered, ''];
+        });
     };
 
     const handleUpdatePlaca = (index: number, value: string) => {
@@ -177,8 +190,14 @@ const ReusableProcessComponent: React.FC<ReusableProcessComponentProps> = ({ pro
     };
 
     const handleRemovePlaca = (index: number) => {
-        setPlacasFields((prev) => prev.filter((_, i) => i !== index));
-        setPlacasUsadasFields((prev) => prev.filter((_, i) => i !== index));
+        setPlacasFields((prev) => {
+            const filtered = prev.filter((_, i) => i !== index).filter((p) => p && p.trim() !== '');
+            return filtered.length > 0 ? filtered : [];
+        });
+        setPlacasUsadasFields((prev) => {
+            const filtered = prev.filter((_, i) => i !== index).filter((p) => p && p.trim() !== '');
+            return filtered.length > 0 ? filtered : [];
+        });
     };
 
     return (
@@ -204,8 +223,20 @@ const ReusableProcessComponent: React.FC<ReusableProcessComponentProps> = ({ pro
                     </thead>
                     <tbody>
                         {data.map((item) => {
-                            const placasAUsar = JSON.parse(item.PLACAS_A_USAR); // Parse JSON string to array
-                            const cantidadPlacas = JSON.parse(item.CANTIDAD_PLACAS); // Parse JSON string to array
+                            let placasAUsar: string[] = [];
+                            let cantidadPlacas: string[] = [];
+                            try {
+                                const parsedPlacas = JSON.parse(item.PLACAS_A_USAR);
+                                placasAUsar = Array.isArray(parsedPlacas) ? parsedPlacas : [];
+                            } catch {
+                                placasAUsar = [];
+                            }
+                            try {
+                                const parsedCant = JSON.parse(item.CANTIDAD_PLACAS);
+                                cantidadPlacas = Array.isArray(parsedCant) ? parsedCant : [];
+                            } catch {
+                                cantidadPlacas = [];
+                            }
 
                             return (
                                 <tr key={item.ID} style={{ backgroundColor: '#fff', borderBottom: '1px solid #ddd' }}>
