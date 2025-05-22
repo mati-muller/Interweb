@@ -38,7 +38,7 @@ export default function Encol() {
     const [placasUsadasFields, setPlacasUsadasFields] = useState<string[]>(['']); // Dynamic fields for Placas Usadas
     const [alertModalVisible, setAlertModalVisible] = useState(false); // State for alert modal visibility
     const [alertMessage, setAlertMessage] = useState(''); // State for alert message
-    const [sinConsumoPlacas, setSinConsumoPlacas] = useState(false); // State for "sin consumo de placas"
+    const [sinConsumoPlacas, setSinConsumoPlacas] = useState(false); // State for "sin consumo de placas", por defecto desmarcado
     const [selectedEncolado, setSelectedEncolado] = useState<'Encolado 1' | 'Encolado 2'>('Encolado 1'); // Dropdown state
     const [selectedItemsEncolado1, setSelectedItemsEncolado1] = useState<DataItem[]>([]); // Separate table for Encolado 1
     const [selectedItemsEncolado2, setSelectedItemsEncolado2] = useState<DataItem[]>([]); // Separate table for Encolado 2
@@ -74,6 +74,7 @@ export default function Encol() {
         setDesiredQuantity(''); // Reset desired quantity
         setPlacasFields(item.Placas.map((placa) => placa.DesProd)); // Pre-fill all "Tipo Placa" fields with DesProd
         setPlacasUsadasFields(item.Placas.map(() => '')); // Reset all "Cantidad a usar" fields
+        setSinConsumoPlacas(false); // Asegura que el checkbox esté desmarcado al abrir el modal
         setShowModal(true);
     };
 
