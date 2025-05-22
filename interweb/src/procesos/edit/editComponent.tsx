@@ -36,6 +36,7 @@ const ReusableProcessComponent: React.FC<ReusableProcessComponentProps> = ({ pro
     });
     const [placasFields, setPlacasFields] = useState<string[]>(['']); // Dynamic fields for Placas
     const [placasUsadasFields, setPlacasUsadasFields] = useState<string[]>(['']); // Dynamic fields for Placas Usadas
+    const [placasCantMat, setPlacasCantMat] = useState<number[]>([]); // Nuevo: guarda CantMat de cada placa
 
     const fetchData = () => {
         const apiUrl = `${API_BASE_URL}/app/${proceso}`;
@@ -64,20 +65,39 @@ const ReusableProcessComponent: React.FC<ReusableProcessComponentProps> = ({ pro
         });
 
         // Pre-fill placas fields based on the row's data
-        let placasArray: string[] = [];
-        let placasUsadasArray: string[] = [];
-        try {
-            placasArray = typeof row.PLACAS_A_USAR === 'string' ? JSON.parse(row.PLACAS_A_USAR) : [];
-        } catch (e) {
-            placasArray = [];
-        }
-        try {
-            placasUsadasArray = typeof row.CANTIDAD_PLACAS === 'string' ? JSON.parse(row.CANTIDAD_PLACAS) : [];
-        } catch (e) {
-            placasUsadasArray = [];
-        }
+        const placasArray = row.PLACAS_A_USAR
+            ? row.PLACAS_A_USAR.replace(/\[|\]|"/g, '').split(',').map((placa) => placa.trim())
+            : [];
+        const placasUsadasArray = row.CANTIDAD_PLACAS
+            ? row.CANTIDAD_PLACAS.replace(/\[|\]|"/g, '').split(',').map((cantidad) => cantidad.trim())
+            : [];
         setPlacasFields(placasArray);
         setPlacasUsadasFields(placasUsadasArray);
+
+        // Fetch una sola vez el CantMat y lo guarda en el estado
+        // Usar el endpoint correcto para obtener CantMat
+        fetch(`${API_BASE_URL}/procesos/pendientes-${proceso}`)
+            .then(res => res.json())
+            .then((data: any[]) => {
+                const item = data.find((d) => d.ID === row.ID);
+                if (item && item.Placas) {
+                    let placasArr = item.Placas;
+                    if (typeof placasArr === 'string') {
+                        try { placasArr = JSON.parse(placasArr); } catch { placasArr = []; }
+                    }
+                    if (Array.isArray(placasArr)) {
+                        setPlacasCantMat(placasArr.map((placa: any) => Number(placa.CantMat) || 1));
+                        // Sugerencia inicial
+                        if (row.CANT_A_FABRICAR) {
+                            const sugeridas = placasArr.map((placa: any) => {
+                                const cantmat = Number(placa.CantMat) || 1;
+                                return Math.ceil(Number(row.CANT_A_FABRICAR) * cantmat).toString();
+                            });
+                            setPlacasUsadasFields(sugeridas);
+                        }
+                    }
+                }
+            });
 
         setModalIsOpen(true);
     };
@@ -97,17 +117,31 @@ const ReusableProcessComponent: React.FC<ReusableProcessComponentProps> = ({ pro
             ...prev,
             [field]: value,
         }));
+
+        // Si el usuario cambia la cantidad a fabricar, usa el CantMat ya guardado
+        if (field === 'CANT_A_FABRICAR' && placasCantMat.length > 0) {
+            const sugeridas = placasCantMat.map((cantmat) => {
+                return Math.ceil(Number(value) * cantmat).toString();
+            });
+            setPlacasUsadasFields(sugeridas);
+        }
     };
 
     const handleSubmit = () => {
         if (!selectedRow) return;
 
-        // Adaptar los campos al payload esperado por el backend
+        // Update formData with the latest placasFields and placasUsadasFields
+        const updatedFormData = {
+            ...formData,
+            PLACAS_A_USAR: JSON.stringify(placasFields),
+            CANTIDAD_PLACAS: JSON.stringify(placasUsadasFields),
+        };
+
         const payload = {
             ID: selectedRow.ID,
-            CANT_A_FABRICAR: parseInt(formData.CANT_A_FABRICAR, 10),
-            transformedPlacas: placasFields.filter((p) => p !== ''),
-            placasUsadas: placasUsadasFields.map((v) => Number(v) || 0),
+            CANT_A_FABRICAR: parseInt(updatedFormData.CANT_A_FABRICAR, 10),
+            PLACAS_A_USAR: updatedFormData.PLACAS_A_USAR,
+            CANTIDAD_PLACAS: updatedFormData.CANTIDAD_PLACAS,
         };
 
         axios.post(`${API_BASE_URL}/edit-${proceso}`, payload)
@@ -170,18 +204,8 @@ const ReusableProcessComponent: React.FC<ReusableProcessComponentProps> = ({ pro
                     </thead>
                     <tbody>
                         {data.map((item) => {
-                            let placasAUsar: string[] = [];
-                            let cantidadPlacas: string[] = [];
-                            try {
-                                placasAUsar = typeof item.PLACAS_A_USAR === 'string' ? JSON.parse(item.PLACAS_A_USAR) : [];
-                            } catch (e) {
-                                placasAUsar = [];
-                            }
-                            try {
-                                cantidadPlacas = typeof item.CANTIDAD_PLACAS === 'string' ? JSON.parse(item.CANTIDAD_PLACAS) : [];
-                            } catch (e) {
-                                cantidadPlacas = [];
-                            }
+                            const placasAUsar = JSON.parse(item.PLACAS_A_USAR); // Parse JSON string to array
+                            const cantidadPlacas = JSON.parse(item.CANTIDAD_PLACAS); // Parse JSON string to array
 
                             return (
                                 <tr key={item.ID} style={{ backgroundColor: '#fff', borderBottom: '1px solid #ddd' }}>
@@ -192,14 +216,14 @@ const ReusableProcessComponent: React.FC<ReusableProcessComponentProps> = ({ pro
                                     <td style={{ padding: '10px', border: '1px solid #ddd' }}>{item.DETPROD}</td>
                                     <td style={{ padding: '10px', border: '1px solid #ddd' }}>{item.CANT_A_FABRICAR}</td>
                                     <td style={{ padding: '10px', border: '1px solid #ddd' }}>
-                                        {Array.isArray(placasAUsar) && placasAUsar.map((placa: string, index: number) => (
+                                        {placasAUsar.map((placa: string, index: number) => (
                                             <div key={`placa-${index}`} style={{ marginBottom: '5px' }}>
                                                 <strong>Placa:</strong> {placa}
                                             </div>
                                         ))}
                                     </td>
                                     <td style={{ padding: '10px', border: '1px solid #ddd' }}>
-                                        {Array.isArray(cantidadPlacas) && cantidadPlacas.map((cantidad: string, index: number) => (
+                                        {cantidadPlacas.map((cantidad: string, index: number) => (
                                             <div key={`cantidad-${index}`} style={{ marginBottom: '5px' }}>
                                                 <strong>Cantidad:</strong> {cantidad}
                                             </div>
