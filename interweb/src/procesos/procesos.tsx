@@ -130,13 +130,25 @@ const ProcesosTable: React.FC = () => {
                                         <tr>
                                             <td colSpan={3} style={{ padding: '10px', border: '1px solid #ddd' }}>
                                                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                                    <thead>
+                                                        <tr style={{ backgroundColor: '#f3e7d2', color: '#333' }}>
+                                                            <th style={{ padding: '8px', border: '1px solid #ddd' }}>Proceso</th>
+                                                            <th style={{ padding: '8px', border: '1px solid #ddd' }}>Estado</th>
+                                                            <th style={{ padding: '8px', border: '1px solid #ddd' }}>Cantidad a producir</th>
+                                                            <th style={{ padding: '8px', border: '1px solid #ddd' }}>Cantidad producida</th>
+                                                            <th style={{ padding: '8px', border: '1px solid #ddd' }}>Cantidad total</th>
+                                                            <th style={{ padding: '8px', border: '1px solid #ddd' }}>Fecha entrega</th>
+                                                        </tr>
+                                                    </thead>
                                                     <tbody>
                                                         {item.procesos.map((proceso: any, procIndex: number) => (
                                                             <tr key={procIndex} style={{ backgroundColor: '#fff', borderBottom: '1px solid #ddd' }}>
-                                                                <td style={{ padding: '10px', border: '1px solid #ddd' }}>{proceso.PROCESO}</td>
-                                                                <td style={{ padding: '10px', border: '1px solid #ddd' }}>{proceso.cantidad_producida}</td>
-                                                                <td style={{ padding: '10px', border: '1px solid #ddd' }}>{proceso.ESTADO_PROC}</td>
-                                                                
+                                                                <td style={{ padding: '8px', border: '1px solid #ddd' }}>{proceso.PROCESO}</td>
+                                                                <td style={{ padding: '8px', border: '1px solid #ddd' }}>{proceso.ESTADO_PROC}</td>
+                                                                <td style={{ padding: '8px', border: '1px solid #ddd' }}>{proceso.CANT_A_PROD}</td>
+                                                                <td style={{ padding: '8px', border: '1px solid #ddd' }}>{proceso.cantidad_producida}</td>
+                                                                <td style={{ padding: '8px', border: '1px solid #ddd' }}>{proceso.CANTPROD}</td>
+                                                                <td style={{ padding: '8px', border: '1px solid #ddd' }}>{proceso.FECHA_ENTREGA}</td>
                                                             </tr>
                                                         ))}
                                                     </tbody>
