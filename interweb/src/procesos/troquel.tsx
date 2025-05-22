@@ -38,10 +38,13 @@ export default function Troquel() {
     const [placasUsadasFields, setPlacasUsadasFields] = useState<string[]>(['']); // Dynamic fields for Placas Usadas
     const [alertModalVisible, setAlertModalVisible] = useState(false); // State for alert modal visibility
     const [alertMessage, setAlertMessage] = useState(''); // State for alert message
-    const [sinConsumoPlacas, setSinConsumoPlacas] = useState(false); // State for "sin consumo de placas"
-    const [selectedTroqueladora, setSelectedTroqueladora] = useState<'Troqueladora Grande' | 'Troqueladora Chica'>('Troqueladora Grande'); // Dropdown state
-    const [selectedItemsTroqueladoraGrande, setSelectedItemsTroqueladoraGrande] = useState<DataItem[]>([]); // Separate table for Troqueladora Grande
-    const [selectedItemsTroqueladoraChica, setSelectedItemsTroqueladoraChica] = useState<DataItem[]>([]); // Separate table for Troqueladora Chica
+    const [sinConsumoPlacas, setSinConsumoPlacas] = useState(false); // State for "sin consumo de placas", por defecto desmarcado
+    const [selectedEncolado, setSelectedEncolado] = useState<'Troqueladora Grande' | 'Troqueladora Chica'>('Troqueladora Grande'); // Dropdown state
+    const [selectedItemsEncolado1, setSelectedItemsEncolado1] = useState<DataItem[]>([]); // Separate table for Encolado 1
+    const [selectedItemsEncolado2, setSelectedItemsEncolado2] = useState<DataItem[]>([]); // Separate table for Encolado 2
+    const [encoladoData, setEncoladoData] = useState<DataItem[]>([]); // Data from /app/encolado
+    const [encolado2Data, setEncolado2Data] = useState<DataItem[]>([]); // Data from /app/encolado2
+    const [showEncoladoTable, setShowEncoladoTable] = useState<'none' | 'troquelado' | 'troquelado'>('none');
 
     const fetchData = () => {
         const apiUrl = `${API_BASE_URL}/procesos/pendientes-troquelado`;
@@ -71,6 +74,7 @@ export default function Troquel() {
         setDesiredQuantity(''); // Reset desired quantity
         setPlacasFields(item.Placas.map((placa) => placa.DesProd)); // Pre-fill all "Tipo Placa" fields with DesProd
         setPlacasUsadasFields(item.Placas.map(() => '')); // Reset all "Cantidad a usar" fields
+        setSinConsumoPlacas(false); // Asegura que el checkbox esté desmarcado al abrir el modal
         setShowModal(true);
     };
 
@@ -78,8 +82,8 @@ export default function Troquel() {
         if (selectedItem && desiredQuantity !== '' && !sinConsumoPlacas) {
             const updatedPlacasUsadas = selectedItem.Placas.map((placa, index) => {
                 const currentValue = placasUsadasFields[index];
-                return currentValue !== '' ? currentValue : (parseFloat(desiredQuantity) * placa.CantMat).toFixed(2);
-            }); // Actualizar dinámicamente con el valor actual
+                return currentValue !== '' ? Math.ceil(Number(currentValue)).toString() : Math.ceil(parseFloat(desiredQuantity) * placa.CantMat).toString();
+            }); // Actualizar dinámicamente con el valor actual y redondear hacia arriba
             setPlacasUsadasFields(updatedPlacasUsadas);
         }
     }, [desiredQuantity, selectedItem, sinConsumoPlacas]); // Add sinConsumoPlacas to dependencies
@@ -88,8 +92,8 @@ export default function Troquel() {
         setDesiredQuantity(value); // Actualizar el estado de desiredQuantity
         if (selectedItem) {
             const updatedPlacasUsadas = selectedItem.Placas.map((placa) =>
-                (parseFloat(value) * placa.CantMat).toFixed(2)
-            ); // Recalcular dinámicamente
+                Math.ceil(parseFloat(value) * placa.CantMat).toString()
+            ); // Recalcular dinámicamente y redondear hacia arriba
             setPlacasUsadasFields(updatedPlacasUsadas);
         }
     };
@@ -99,51 +103,51 @@ export default function Troquel() {
             if (!sinConsumoPlacas) {
                 const inventoryData = JSON.parse(localStorage.getItem('inventoryData') || '[]');
                 const placasUsadas = placasUsadasFields.map((value, index) => 
-                    Number(value || (parseFloat(desiredQuantity) * selectedItem.Placas[index].CantMat).toFixed(2))
+                    Math.ceil(Number(value || (parseFloat(desiredQuantity) * selectedItem.Placas[index].CantMat)))
                 );
-    
+
                 for (let i = 0; i < placasFields.length; i++) {
                     const placaName = placasFields[i];
                     const requiredQuantity = placasUsadas[i];
                     const inventoryItem = inventoryData.find((item: { placa: string }) => item.placa === placaName);
-    
-                    if (!inventoryItem || inventoryItem.Cantidad < requiredQuantity) {
-                        setAlertMessage(`No hay suficiente inventario para la placa "${placaName}". Requerido: ${requiredQuantity}, Disponible: ${inventoryItem ? inventoryItem.Cantidad : 0}`);
+
+                    if (!inventoryItem || inventoryItem.cantidad < requiredQuantity) {
+                        setAlertMessage(`No hay suficiente inventario para la placa "${placaName}". Requerido: ${requiredQuantity}, Disponible: ${inventoryItem ? inventoryItem.cantidad : 0}`);
                         setAlertModalVisible(true);
                         return;
                     }
                 }
-    
+
                 placasFields.forEach((placaName, index) => {
                     const inventoryItem = inventoryData.find((item: { placa: string }) => item.placa === placaName);
                     if (inventoryItem) {
-                        inventoryItem.Cantidad -= placasUsadas[index];
+                        inventoryItem.cantidad -= placasUsadas[index];
                     }
                 });
                 localStorage.setItem('inventoryData', JSON.stringify(inventoryData));
             }
-    
+
             const updatedItem = {
                 ...selectedItem,
                 CANT_A_FABRICAR: parseInt(desiredQuantity, 10),
-                placasUsadas: sinConsumoPlacas ? [] : placasUsadasFields.map(Number),
+                placasUsadas: sinConsumoPlacas ? [] : placasUsadasFields.map((value, index) => Math.ceil(Number(value))),
                 transformedPlacas: sinConsumoPlacas ? [] : placasFields,
             };
-    
-            if (selectedTroqueladora === 'Troqueladora Grande') {
-                setSelectedItemsTroqueladoraGrande((prev) => [...prev, updatedItem]);
+
+            if (selectedEncolado === 'Troqueladora Grande') {
+                setSelectedItemsEncolado1((prev) => [...prev, updatedItem]);
             } else {
-                setSelectedItemsTroqueladoraChica((prev) => [...prev, updatedItem]);
+                setSelectedItemsEncolado2((prev) => [...prev, updatedItem]);
             }
-    
+
             setShowModal(false);
             setDesiredQuantity('');
         }
     };
     
-    const handleRemoveFromSelected = (index: number, troqueladoraType: 'Troqueladora Grande' | 'Troqueladora Chica') => {
-        if (troqueladoraType === 'Troqueladora Grande') {
-            setSelectedItemsTroqueladoraGrande((prev) => {
+    const handleRemoveFromSelected = (index: number, encoladoType: 'Troqueladora Grande' | 'Troqueladora Chica') => {
+        if (encoladoType === 'Troqueladora Grande') {
+            setSelectedItemsEncolado1((prev) => {
                 const removedItem = prev[index];
                 setData((prevData) => {
                     const updatedData = prevData.some((item) => item.ID === removedItem.ID)
@@ -158,7 +162,7 @@ export default function Troquel() {
                 return prev.filter((_, i) => i !== index);
             });
         } else {
-            setSelectedItemsTroqueladoraChica((prev) => {
+            setSelectedItemsEncolado2((prev) => {
                 const removedItem = prev[index];
                 setData((prevData) => {
                     const updatedData = prevData.some((item) => item.ID === removedItem.ID)
@@ -175,8 +179,8 @@ export default function Troquel() {
         }
     };
 
-    const handleSubmitSelected = (troqueladoraType: 'Troqueladora Grande' | 'Troqueladora Chica') => {
-        const selectedItems = troqueladoraType === 'Troqueladora Grande' ? selectedItemsTroqueladoraGrande : selectedItemsTroqueladoraChica;
+    const handleSubmitSelected = (encoladoType: 'Troqueladora Grande' | 'Troqueladora Chica') => {
+        const selectedItems = encoladoType === 'Troqueladora Grande' ? selectedItemsEncolado1 : selectedItemsEncolado2;
 
         if (selectedItems.length === 0) {
             alert('No items selected.');
@@ -186,57 +190,57 @@ export default function Troquel() {
         const payload = selectedItems.map((item) => ({
             ID: item.ID,
             CANT_A_FABRICAR: item.CANT_A_FABRICAR,
-            transformedPlacas: item.transformedPlacas || [], // Include transformedPlacas
-            placasUsadas: item.placasUsadas || [], // Include placasUsadas
+            transformedPlacas: item.transformedPlacas ?? item.transformedPlacas ?? [],
+            placasUsadas: item.placasUsadas ?? item.placasUsadas ?? [],
         }));
 
-        const endpoint = troqueladoraType === 'Troqueladora Grande' ? `${API_BASE_URL}/app/update-troquelado` : `${API_BASE_URL}/app/update-troquelado2`;
+        const endpoint = encoladoType === 'Troqueladora Grande' ? `${API_BASE_URL}/app/update-troquelado` : `${API_BASE_URL}/app/update-troquelado2`;
 
         axios.post(endpoint, { items: payload }, {
             headers: { 'Content-Type': 'application/json' }
         })
             .then(() => {
-                alert(`Selected items for ${troqueladoraType} submitted successfully!`);
-                if (troqueladoraType === 'Troqueladora Grande') {
-                    setSelectedItemsTroqueladoraGrande([]);
+                alert(`Selected items for ${encoladoType} submitted successfully!`);
+                if (encoladoType === 'Troqueladora Grande') {
+                    setSelectedItemsEncolado1([]);
                 } else {
-                    setSelectedItemsTroqueladoraChica([]);
+                    setSelectedItemsEncolado2([]);
                 }
                 fetchData();
             })
             .catch((error) => {
-                console.error(`Error submitting selected items for ${troqueladoraType}:`, error);
-                alert(`Failed to submit selected items for ${troqueladoraType}.`);
+                console.error(`Error submitting selected items for ${encoladoType}:`, error);
+                alert(`Failed to submit selected items for ${encoladoType}.`);
             });
     };
 
-    const moveItemUp = (index: number, troqueladoraType: 'Troqueladora Grande' | 'Troqueladora Chica') => {
+    const moveItemUp = (index: number, encoladoType: 'Troqueladora Grande' | 'Troqueladora Chica') => {
         if (index === 0) return;
-        if (troqueladoraType === 'Troqueladora Grande') {
-            setSelectedItemsTroqueladoraGrande((prev) => {
+        if (encoladoType === 'Troqueladora Grande') {
+            setSelectedItemsEncolado1((prev) => {
                 const updated = [...prev];
                 [updated[index - 1], updated[index]] = [updated[index], updated[index - 1]];
                 return updated;
             });
         } else {
-            setSelectedItemsTroqueladoraChica((prev) => {
+            setSelectedItemsEncolado2((prev) => {
                 const updated = [...prev];
                 [updated[index - 1], updated[index]] = [updated[index], updated[index - 1]];
                 return updated;
             });
         }
     };
-    
-    const moveItemDown = (index: number, troqueladoraType: 'Troqueladora Grande' | 'Troqueladora Chica') => {
-        if (troqueladoraType === 'Troqueladora Grande') {
-            setSelectedItemsTroqueladoraGrande((prev) => {
+
+    const moveItemDown = (index: number, encoladoType: 'Troqueladora Grande' | 'Troqueladora Chica') => {
+        if (encoladoType === 'Troqueladora Grande') {
+            setSelectedItemsEncolado1((prev) => {
                 if (index === prev.length - 1) return prev;
                 const updated = [...prev];
                 [updated[index], updated[index + 1]] = [updated[index + 1], updated[index]];
                 return updated;
             });
         } else {
-            setSelectedItemsTroqueladoraChica((prev) => {
+            setSelectedItemsEncolado2((prev) => {
                 if (index === prev.length - 1) return prev;
                 const updated = [...prev];
                 [updated[index], updated[index + 1]] = [updated[index + 1], updated[index]];
@@ -277,6 +281,43 @@ export default function Troquel() {
 
     useEffect(() => {
         fetchData();
+    }, []);
+
+    // Render encolado/encolado2 GET results directamente en la tabla de selección
+    useEffect(() => {
+        const fetchAndSetEncolados = async () => {
+            setLoading(true);
+            try {
+                const [res1, res2] = await Promise.all([
+                    axios.get(`${API_BASE_URL}/app/troquelado`),
+                    axios.get(`${API_BASE_URL}/app/troquelado2`)
+                ]);
+                // Mantén todos los campos originales y agrega los del payload
+                const parsePlacas = (arr: any[]) => arr.map((item) => {
+                    let transformedPlacas: string[] = [];
+                    let placasUsadas: number[] = [];
+                    try {
+                        transformedPlacas = item.PLACAS_A_USAR ? JSON.parse(item.PLACAS_A_USAR) : [];
+                    } catch { transformedPlacas = []; }
+                    try {
+                        placasUsadas = item.CANTIDAD_PLACAS ? JSON.parse(item.CANTIDAD_PLACAS) : [];
+                    } catch { placasUsadas = []; }
+                    return {
+                        ...item,
+                        CANT_A_FABRICAR: item.CANT_A_FABRICAR ?? 0,
+                        transformedPlacas,
+                        placasUsadas,
+                    };
+                });
+                setSelectedItemsEncolado1(parsePlacas(res1.data));
+                setSelectedItemsEncolado2(parsePlacas(res2.data));
+            } catch (err) {
+                setError('Error al obtener datos de encolado/encolado2');
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchAndSetEncolados();
     }, []);
 
     const filteredData = data.filter((item) =>
@@ -327,11 +368,11 @@ export default function Troquel() {
                     fontSize: '16px',
                 }}
             />
-            {selectedItemsTroqueladoraGrande.length > 0 && (
+            {selectedItemsEncolado1.length > 0 && (
                 <div style={{ marginBottom: '20px', padding: '15px', border: '1px solid #ddd', borderRadius: '5px', backgroundColor: '#f9f9f9' }}>
-                    <h3 style={{ marginBottom: '15px', color: '#333' }}>Elementos Seleccionados - Troqueladora Grande</h3>
+                    <h3 style={{ marginBottom: '15px', color: '#333' }}>Elementos Seleccionados - Troquelado Grande</h3>
                     <ul style={{ listStyleType: 'none', padding: 0 }}>
-                        {selectedItemsTroqueladoraGrande.map((item, index) => (
+                        {selectedItemsEncolado1.map((item, index) => (
                             <li key={item.ID} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px', backgroundColor: '#fff', padding: '10px', borderRadius: '5px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}>
                                 <span style={{ marginRight: '10px', fontSize: '14px', fontWeight: 'bold' }}>
                                     {index + 1}.
@@ -365,7 +406,7 @@ export default function Troquel() {
                                         cursor: 'pointer',
                                     }}
                                     onClick={() => moveItemDown(index, 'Troqueladora Grande')}
-                                    disabled={index === selectedItemsTroqueladoraGrande.length - 1}
+                                    disabled={index === selectedItemsEncolado1.length - 1}
                                 >
                                     ↓
                                 </button>
@@ -414,11 +455,11 @@ export default function Troquel() {
                     </button>
                 </div>
             )}
-            {selectedItemsTroqueladoraChica.length > 0 && (
+            {selectedItemsEncolado2.length > 0 && (
                 <div style={{ marginBottom: '20px', padding: '15px', border: '1px solid #ddd', borderRadius: '5px', backgroundColor: '#f9f9f9' }}>
                     <h3 style={{ marginBottom: '15px', color: '#333' }}>Elementos Seleccionados - Troqueladora Chica</h3>
                     <ul style={{ listStyleType: 'none', padding: 0 }}>
-                        {selectedItemsTroqueladoraChica.map((item, index) => (
+                        {selectedItemsEncolado2.map((item, index) => (
                             <li key={item.ID} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px', backgroundColor: '#fff', padding: '10px', borderRadius: '5px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}>
                                 <span style={{ marginRight: '10px', fontSize: '14px', fontWeight: 'bold' }}>
                                     {index + 1}.
@@ -452,7 +493,7 @@ export default function Troquel() {
                                         cursor: 'pointer',
                                     }}
                                     onClick={() => moveItemDown(index, 'Troqueladora Chica')}
-                                    disabled={index === selectedItemsTroqueladoraChica.length - 1}
+                                    disabled={index === selectedItemsEncolado2.length - 1}
                                 >
                                     ↓
                                 </button>
@@ -674,8 +715,8 @@ export default function Troquel() {
                             </label>
                         </div>
                         <select
-                            value={selectedTroqueladora}
-                            onChange={(e) => setSelectedTroqueladora(e.target.value as 'Troqueladora Grande' | 'Troqueladora Chica')}
+                            value={selectedEncolado}
+                            onChange={(e) => setSelectedEncolado(e.target.value as 'Troqueladora Grande' | 'Troqueladora Chica')}
                             style={{
                                 width: '90%',
                                 padding: '12px',
@@ -685,8 +726,8 @@ export default function Troquel() {
                                 fontSize: '16px',
                             }}
                         >
-                            <option value="Troqueladora Grande">Troqueladora Grande</option>
-                            <option value="Troqueladora Chica">Troqueladora Chica</option>
+                            <option value="Multiple 1">Multiple 1</option>
+                            <option value="Multiple 2">Multiple 2</option>
                         </select>
                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                             <button
