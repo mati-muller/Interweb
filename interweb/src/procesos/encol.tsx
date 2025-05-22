@@ -42,6 +42,9 @@ export default function Encol() {
     const [selectedEncolado, setSelectedEncolado] = useState<'Encolado 1' | 'Encolado 2'>('Encolado 1'); // Dropdown state
     const [selectedItemsEncolado1, setSelectedItemsEncolado1] = useState<DataItem[]>([]); // Separate table for Encolado 1
     const [selectedItemsEncolado2, setSelectedItemsEncolado2] = useState<DataItem[]>([]); // Separate table for Encolado 2
+    const [encoladoData, setEncoladoData] = useState<DataItem[]>([]); // Data from /app/encolado
+    const [encolado2Data, setEncolado2Data] = useState<DataItem[]>([]); // Data from /app/encolado2
+    const [showEncoladoTable, setShowEncoladoTable] = useState<'none' | 'encolado' | 'encolado2'>('none');
 
     const fetchData = () => {
         const apiUrl = `${API_BASE_URL}/procesos/pendientes-encolado`;
@@ -78,8 +81,8 @@ export default function Encol() {
         if (selectedItem && desiredQuantity !== '' && !sinConsumoPlacas) {
             const updatedPlacasUsadas = selectedItem.Placas.map((placa, index) => {
                 const currentValue = placasUsadasFields[index];
-                return currentValue !== '' ? currentValue : (parseFloat(desiredQuantity) * placa.CantMat).toFixed(2);
-            }); // Actualizar dinámicamente con el valor actual
+                return currentValue !== '' ? Math.ceil(Number(currentValue)).toString() : Math.ceil(parseFloat(desiredQuantity) * placa.CantMat).toString();
+            }); // Actualizar dinámicamente con el valor actual y redondear hacia arriba
             setPlacasUsadasFields(updatedPlacasUsadas);
         }
     }, [desiredQuantity, selectedItem, sinConsumoPlacas]); // Add sinConsumoPlacas to dependencies
@@ -88,8 +91,8 @@ export default function Encol() {
         setDesiredQuantity(value); // Actualizar el estado de desiredQuantity
         if (selectedItem) {
             const updatedPlacasUsadas = selectedItem.Placas.map((placa) =>
-                (parseFloat(value) * placa.CantMat).toFixed(2)
-            ); // Recalcular dinámicamente
+                Math.ceil(parseFloat(value) * placa.CantMat).toString()
+            ); // Recalcular dinámicamente y redondear hacia arriba
             setPlacasUsadasFields(updatedPlacasUsadas);
         }
     };
@@ -99,43 +102,43 @@ export default function Encol() {
             if (!sinConsumoPlacas) {
                 const inventoryData = JSON.parse(localStorage.getItem('inventoryData') || '[]');
                 const placasUsadas = placasUsadasFields.map((value, index) => 
-                    Number(value || (parseFloat(desiredQuantity) * selectedItem.Placas[index].CantMat).toFixed(2))
+                    Math.ceil(Number(value || (parseFloat(desiredQuantity) * selectedItem.Placas[index].CantMat)))
                 );
-    
+
                 for (let i = 0; i < placasFields.length; i++) {
                     const placaName = placasFields[i];
                     const requiredQuantity = placasUsadas[i];
                     const inventoryItem = inventoryData.find((item: { placa: string }) => item.placa === placaName);
-    
-                    if (!inventoryItem || inventoryItem.Cantidad < requiredQuantity) {
-                        setAlertMessage(`No hay suficiente inventario para la placa "${placaName}". Requerido: ${requiredQuantity}, Disponible: ${inventoryItem ? inventoryItem.Cantidad : 0}`);
+
+                    if (!inventoryItem || inventoryItem.cantidad < requiredQuantity) {
+                        setAlertMessage(`No hay suficiente inventario para la placa "${placaName}". Requerido: ${requiredQuantity}, Disponible: ${inventoryItem ? inventoryItem.cantidad : 0}`);
                         setAlertModalVisible(true);
                         return;
                     }
                 }
-    
+
                 placasFields.forEach((placaName, index) => {
                     const inventoryItem = inventoryData.find((item: { placa: string }) => item.placa === placaName);
                     if (inventoryItem) {
-                        inventoryItem.Cantidad -= placasUsadas[index];
+                        inventoryItem.cantidad -= placasUsadas[index];
                     }
                 });
                 localStorage.setItem('inventoryData', JSON.stringify(inventoryData));
             }
-    
+
             const updatedItem = {
                 ...selectedItem,
                 CANT_A_FABRICAR: parseInt(desiredQuantity, 10),
-                placasUsadas: sinConsumoPlacas ? [] : placasUsadasFields.map(Number),
+                placasUsadas: sinConsumoPlacas ? [] : placasUsadasFields.map((value, index) => Math.ceil(Number(value))),
                 transformedPlacas: sinConsumoPlacas ? [] : placasFields,
             };
-    
+
             if (selectedEncolado === 'Encolado 1') {
                 setSelectedItemsEncolado1((prev) => [...prev, updatedItem]);
             } else {
                 setSelectedItemsEncolado2((prev) => [...prev, updatedItem]);
             }
-    
+
             setShowModal(false);
             setDesiredQuantity('');
         }
@@ -186,8 +189,8 @@ export default function Encol() {
         const payload = selectedItems.map((item) => ({
             ID: item.ID,
             CANT_A_FABRICAR: item.CANT_A_FABRICAR,
-            transformedPlacas: item.transformedPlacas || [], // Include transformedPlacas
-            placasUsadas: item.placasUsadas || [], // Include placasUsadas
+            transformedPlacas: item.transformedPlacas ?? item.transformedPlacas ?? [],
+            placasUsadas: item.placasUsadas ?? item.placasUsadas ?? [],
         }));
 
         const endpoint = encoladoType === 'Encolado 1' ? `${API_BASE_URL}/app/update-encolado` : `${API_BASE_URL}/app/update-encolado2`;
@@ -277,6 +280,43 @@ export default function Encol() {
 
     useEffect(() => {
         fetchData();
+    }, []);
+
+    // Render encolado/encolado2 GET results directamente en la tabla de selección
+    useEffect(() => {
+        const fetchAndSetEncolados = async () => {
+            setLoading(true);
+            try {
+                const [res1, res2] = await Promise.all([
+                    axios.get(`${API_BASE_URL}/app/encolado`),
+                    axios.get(`${API_BASE_URL}/app/encolado2`)
+                ]);
+                // Mantén todos los campos originales y agrega los del payload
+                const parsePlacas = (arr: any[]) => arr.map((item) => {
+                    let transformedPlacas: string[] = [];
+                    let placasUsadas: number[] = [];
+                    try {
+                        transformedPlacas = item.PLACAS_A_USAR ? JSON.parse(item.PLACAS_A_USAR) : [];
+                    } catch { transformedPlacas = []; }
+                    try {
+                        placasUsadas = item.CANTIDAD_PLACAS ? JSON.parse(item.CANTIDAD_PLACAS) : [];
+                    } catch { placasUsadas = []; }
+                    return {
+                        ...item,
+                        CANT_A_FABRICAR: item.CANT_A_FABRICAR ?? 0,
+                        transformedPlacas,
+                        placasUsadas,
+                    };
+                });
+                setSelectedItemsEncolado1(parsePlacas(res1.data));
+                setSelectedItemsEncolado2(parsePlacas(res2.data));
+            } catch (err) {
+                setError('Error al obtener datos de encolado/encolado2');
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchAndSetEncolados();
     }, []);
 
     const filteredData = data.filter((item) =>
