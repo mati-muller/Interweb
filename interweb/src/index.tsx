@@ -21,6 +21,8 @@ import EditTrozado from './procesos/edit/editTroz';
 import EditTroq from './procesos/edit/editTroq';
 import EditEncolado2 from './procesos/edit/editencol2';
 import EditMult from './procesos/edit/editMult';
+
+
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const user = localStorage.getItem('user'); // Ensure this checks for 'user'
   return user ? <>{children}</> : <Navigate to="/login" />;
@@ -131,6 +133,14 @@ root.render(
           element={
             <ProtectedRoute>
               <EditEncolado />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/edit-encolado2"
+          element={
+            <ProtectedRoute>
+              <EditEncolado2 />
             </ProtectedRoute>
           }
         />

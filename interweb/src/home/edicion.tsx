@@ -26,7 +26,10 @@ export default function Edicion() {
             <h1 style={styles.title}>Menú Principal</h1>
             <div style={styles.grid}>
                 <a href="/edit-encolado" style={{ ...styles.button, textDecoration: 'none' }}>
-                    Encolado
+                    Encolado 1
+                </a>
+                <a href="/edit-encolado2" style={{ ...styles.button, textDecoration: 'none' }}>
+                    Encolado 2
                 </a>
                 <a href="/edit-trozado" style={{ ...styles.button, textDecoration: 'none' }}>
                     Trozado
