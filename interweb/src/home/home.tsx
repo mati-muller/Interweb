@@ -48,6 +48,9 @@ export default function Home() {
                 <a href="/users" style={{ ...styles.button, textDecoration: 'none' }}>
                     Ir a módulo de gestión de usuarios
                 </a>
+                <a href="/historial" style={{ ...styles.button, textDecoration: 'none' }}>
+                    Ir a módulo de historial de procesos
+                </a>
             </div>
             <button style={{ ...styles.button, ...styles.logoutButton }} onClick={handleLogout}>
                 Cerrar Sesión
