@@ -23,6 +23,11 @@ export default function UserTable() {
     const procesos = ['Multiple1', 'Multiple2', 'Encolado1', 'Encolado2', 'Troqueladora Grande', 'Troqueladora Chica', 'Emplacado', 'Pegado','Plizado', 'Inventario','Trozado', 'Impresion'];
     const [selectedProcesses, setSelectedProcesses] = useState<string[]>([]);
     const [showProcessModal, setShowProcessModal] = useState(false);
+    const [showRegisterModal, setShowRegisterModal] = useState(false);
+    const [registerNombre, setRegisterNombre] = useState('');
+    const [registerApellido, setRegisterApellido] = useState('');
+    const [registerUsername, setRegisterUsername] = useState('');
+    const [registerPassword, setRegisterPassword] = useState('');
 
     useEffect(() => {
         const fetchUsers = async () => {
@@ -112,9 +117,40 @@ export default function UserTable() {
         }
     };
 
+    const handleRegisterUser = async () => {
+        try {
+            await axios.post(`${config.apiUrl}/users/register`, {
+                nombre: registerNombre,
+                apellido: registerApellido,
+                username: registerUsername,
+                password: registerPassword,
+            });
+            alert('User registered successfully!');
+            setShowRegisterModal(false);
+            // Optionally, you can refresh the user list or add the new user to the state
+        } catch (err) {
+            setError('Failed to register user.');
+        }
+    };
+
     return (
         <div style={{ padding: '20px' }}>
             <h2 style={{ marginBottom: '20px', color: '#333' }}>Lista de Usuarios</h2>
+            <button
+                style={{
+                    marginBottom: '20px',
+                    padding: '10px 20px',
+                    backgroundColor: '#4CAF50',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '5px',
+                    cursor: 'pointer',
+                    fontSize: '16px',
+                }}
+                onClick={() => setShowRegisterModal(true)}
+            >
+                Registrar Usuario
+            </button>
             {loading ? (
                 <p>Loading...</p>
             ) : error ? (
@@ -329,6 +365,94 @@ export default function UserTable() {
                                 }}
                             >
                                 Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Modal de registro de usuario */}
+            {showRegisterModal && (
+                <div
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        zIndex: 1000,
+                    }}
+                >
+                    <div
+                        style={{
+                            backgroundColor: '#fff',
+                            padding: '20px',
+                            borderRadius: '8px',
+                            width: '400px',
+                            maxHeight: '80%',
+                            overflowY: 'auto',
+                            textAlign: 'center',
+                        }}
+                    >
+                        <h3>Registrar Nuevo Usuario</h3>
+                        <input
+                            type="text"
+                            placeholder="Nombre"
+                            value={registerNombre}
+                            onChange={e => setRegisterNombre(e.target.value)}
+                            style={{ width: '100%', padding: '10px', margin: '10px 0', borderRadius: '4px', border: '1px solid #ddd' }}
+                        />
+                        <input
+                            type="text"
+                            placeholder="Apellido"
+                            value={registerApellido}
+                            onChange={e => setRegisterApellido(e.target.value)}
+                            style={{ width: '100%', padding: '10px', margin: '10px 0', borderRadius: '4px', border: '1px solid #ddd' }}
+                        />
+                        <input
+                            type="text"
+                            placeholder="Username"
+                            value={registerUsername}
+                            onChange={e => setRegisterUsername(e.target.value)}
+                            style={{ width: '100%', padding: '10px', margin: '10px 0', borderRadius: '4px', border: '1px solid #ddd' }}
+                        />
+                        <input
+                            type="password"
+                            placeholder="Password"
+                            value={registerPassword}
+                            onChange={e => setRegisterPassword(e.target.value)}
+                            style={{ width: '100%', padding: '10px', margin: '10px 0', borderRadius: '4px', border: '1px solid #ddd' }}
+                        />
+                        <div style={{ marginTop: '20px' }}>
+                            <button
+                                onClick={handleRegisterUser}
+                                style={{
+                                    padding: '10px 20px',
+                                    backgroundColor: '#4CAF50',
+                                    color: '#fff',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                    marginRight: '10px',
+                                }}
+                            >
+                                Registrar
+                            </button>
+                            <button
+                                onClick={() => setShowRegisterModal(false)}
+                                style={{
+                                    padding: '10px 20px',
+                                    backgroundColor: '#f44336',
+                                    color: '#fff',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                }}
+                            >
+                                Cancelar
                             </button>
                         </div>
                     </div>
