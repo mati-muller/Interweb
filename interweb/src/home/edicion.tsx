@@ -49,6 +49,18 @@ export default function Edicion() {
                 <a href="/edit-pegado" style={{ ...styles.button, textDecoration: 'none' }}>
                     Pegado
                 </a>
+                <a href="/edit-emplacado" style={{ ...styles.button, textDecoration: 'none' }}>
+                    Emplacado
+                </a>
+                <a href="/edit-calado" style={{ ...styles.button, textDecoration: 'none' }}>
+                    Calado
+                </a>
+                <a href="/edit-impresion" style={{ ...styles.button, textDecoration: 'none' }}>
+                    Impresión
+                </a>
+                <a href="/edit-plizado" style={{ ...styles.button, textDecoration: 'none' }}>
+                    Plizado
+                </a>
             </div>
             <button style={{ ...styles.button, ...styles.logoutButton }} onClick={handleLogout}>
                 Cerrar Sesión

@@ -38,6 +38,15 @@ export default function Homeprocesos() {
                 <a href="/emplacado" style={{ ...styles.button, textDecoration: 'none' }}>
                     Emplacado
                 </a>
+                <a href="/calado" style={{ ...styles.button, textDecoration: 'none' }}>
+                    Calado
+                </a>
+                <a href="/impresion" style={{ ...styles.button, textDecoration: 'none' }}>
+                    Impresión
+                </a>
+                <a href="/plizado" style={{ ...styles.button, textDecoration: 'none' }}>
+                    Plizado
+                </a>
             </div>
             <a href="/procesos" style={{ ...styles.button, ...styles.logoutButton , textDecoration: 'none' }}>
                     Ver todos los procesos por Nota de venta
