@@ -25,6 +25,8 @@ import EditMult2 from './procesos/edit/editMult2';
 import EditTroq2 from './procesos/edit/editTroq2';
 import EditPegado from './procesos/edit/edirPegado';
 import InventarioTable from './inventario/inventario';
+import Calado from './procesos/calado';
+import Plizado from './procesos/plizado';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const user = localStorage.getItem('user'); // Ensure this checks for 'user'
@@ -131,6 +133,39 @@ root.render(
             </ProtectedRoute>
           }
         />
+
+        <Route
+          path="/multiple"
+          element={
+            <ProtectedRoute>
+              <Mult />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/impresion"
+          element={
+            <ProtectedRoute>
+              <Troquel />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/calado"
+          element={
+            <ProtectedRoute>
+              <Calado />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/plizado"
+          element={
+            <ProtectedRoute>
+              <Plizado />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/edit-encolado"
           element={
@@ -203,14 +238,8 @@ root.render(
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/multiple"
-          element={
-            <ProtectedRoute>
-              <Mult />
-            </ProtectedRoute>
-          }
-        />
+        
+
         <Route
           path="/users"
           element={
