@@ -27,6 +27,10 @@ import EditPegado from './procesos/edit/edirPegado';
 import InventarioTable from './inventario/inventario';
 import Calado from './procesos/calado';
 import Plizado from './procesos/plizado';
+import EditPlizado from './procesos/edit/editPlizado';
+import EditEmplacado from './procesos/edit/editEmplac';
+import EditCalado from './procesos/edit/editCalado';
+import EditImpresion from './procesos/edit/editImpresion';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const user = localStorage.getItem('user'); // Ensure this checks for 'user'
@@ -230,6 +234,39 @@ root.render(
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/edit-emplacado"
+          element={
+            <ProtectedRoute>
+              <EditEmplacado />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/edit-plizado"
+          element={
+            <ProtectedRoute>
+              <EditPlizado />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/edit-calado"
+          element={
+            <ProtectedRoute>
+              <EditCalado />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/edit-impresion"
+          element={
+            <ProtectedRoute>
+              <EditImpresion />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/procesos"
           element={
