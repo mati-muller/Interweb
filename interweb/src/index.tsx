@@ -24,6 +24,7 @@ import EditMult from './procesos/edit/editMult';
 import EditMult2 from './procesos/edit/editMult2';
 import EditTroq2 from './procesos/edit/editTroq2';
 import EditPegado from './procesos/edit/edirPegado';
+import InventarioTable from './inventario/inventario';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const user = localStorage.getItem('user'); // Ensure this checks for 'user'
@@ -218,7 +219,16 @@ root.render(
             </ProtectedRoute>
           }
         />
+        <Route
+        path="/inventario"
+        element={
+          <ProtectedRoute>
+            <InventarioTable />
+          </ProtectedRoute>
+        }
+      />
       </Routes>
+      
     </Router>
   </React.StrictMode>
 );
