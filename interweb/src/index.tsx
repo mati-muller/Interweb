@@ -21,7 +21,9 @@ import EditTrozado from './procesos/edit/editTroz';
 import EditTroq from './procesos/edit/editTroq';
 import EditEncolado2 from './procesos/edit/editencol2';
 import EditMult from './procesos/edit/editMult';
-
+import EditMult2 from './procesos/edit/editMult2';
+import EditTroq2 from './procesos/edit/editTroq2';
+import EditPegado from './procesos/edit/edirPegado';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const user = localStorage.getItem('user'); // Ensure this checks for 'user'
@@ -157,6 +159,38 @@ root.render(
           element={
             <ProtectedRoute>
               <EditTroq />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/edit-troquelado2"
+          element={
+            <ProtectedRoute>
+              <EditTroq2 />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/edit-multiple"
+          element={
+            <ProtectedRoute>
+              <EditMult />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/edit-multiple2"
+          element={
+            <ProtectedRoute>
+              <EditMult2 />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/edit-pegado"
+          element={
+            <ProtectedRoute>
+              <EditPegado />
             </ProtectedRoute>
           }
         />

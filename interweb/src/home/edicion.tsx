@@ -31,11 +31,20 @@ export default function Edicion() {
                 <a href="/edit-encolado2" style={{ ...styles.button, textDecoration: 'none' }}>
                     Encolado 2
                 </a>
+                <a href="/edit-multiple" style={{ ...styles.button, textDecoration: 'none' }}>
+                    Multiple 1
+                </a>
+                <a href="/edit-multiple2" style={{ ...styles.button, textDecoration: 'none' }}>
+                    Multiple 2
+                </a>
                 <a href="/edit-trozado" style={{ ...styles.button, textDecoration: 'none' }}>
                     Trozado
                 </a>
                 <a href="/edit-troquelado" style={{ ...styles.button, textDecoration: 'none' }}>
-                    Troquelado
+                    Troquelado Grande
+                </a>
+                <a href="/edit-troquelado2" style={{ ...styles.button, textDecoration: 'none' }}>
+                    Troquelado Chico
                 </a>
                 <a href="/edit-pegado" style={{ ...styles.button, textDecoration: 'none' }}>
                     Pegado
