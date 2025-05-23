@@ -32,6 +32,7 @@ import EditEmplacado from './procesos/edit/editEmplac';
 import EditCalado from './procesos/edit/editCalado';
 import EditImpresion from './procesos/edit/editImpresion';
 import HistorialTable from './historial/historial';
+import Impresion from './procesos/impresion';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const user = localStorage.getItem('user'); // Ensure this checks for 'user'
@@ -151,7 +152,7 @@ root.render(
           path="/impresion"
           element={
             <ProtectedRoute>
-              <Troquel />
+              <Impresion />
             </ProtectedRoute>
           }
         />
