@@ -39,6 +39,9 @@ export default function Homeprocesos() {
                     Emplacado
                 </a>
             </div>
+            <a href="/procesos" style={{ ...styles.button, ...styles.logoutButton , textDecoration: 'none' }}>
+                    Ver todos los procesos por Nota de venta
+                </a>
             <a href="/home" style={{ ...styles.button, ...styles.logoutButton , textDecoration: 'none' }}>
                     Volver a pagina principal
                 </a>
