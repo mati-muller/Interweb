@@ -30,6 +30,7 @@ const HistorialTable: React.FC = () => {
   const [data, setData] = useState<HistorialItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     axios.get<HistorialItem[]>(API_URL)
@@ -43,12 +44,24 @@ const HistorialTable: React.FC = () => {
       });
   }, []);
 
+  const filteredData = data.filter(item =>
+    item.CODPROD.toLowerCase().includes(search.toLowerCase()) ||
+    item.DETPROD.toLowerCase().includes(search.toLowerCase())
+  );
+
   if (loading) return <div>Cargando...</div>;
   if (error) return <div style={{ color: 'red' }}>{error}</div>;
 
   return (
     <div style={{ overflowX: 'auto', padding: 20 }}>
       <h2>Historial de Procesos</h2>
+      <input
+        type="text"
+        placeholder="Buscar cliente..."
+        value={search}
+        onChange={e => setSearch(e.target.value)}
+        style={{ marginBottom: 16, padding: 14, width: 600, fontSize: 20, border: '1px solid #ccc', borderRadius: 6 }}
+      />
       <table style={{ borderCollapse: 'collapse', width: '100%' }}>
         <thead>
           <tr style={{ backgroundColor: '#c8a165', color: '#fff' }}>
@@ -72,7 +85,7 @@ const HistorialTable: React.FC = () => {
           </tr>
         </thead>
         <tbody>
-          {data.map((item) => (
+          {filteredData.map((item) => (
             <tr key={item.ID}>
               <td style={{ border: '1px solid #ccc', padding: 8 }}>{item.FECHA ? item.FECHA : '-'}</td>
               <td style={{ border: '1px solid #ccc', padding: 8 }}>{item.ID}</td>
