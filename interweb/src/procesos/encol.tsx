@@ -48,6 +48,7 @@ export default function Encol() {
 
     const fetchData = () => {
         const apiUrl = `${API_BASE_URL}/procesos/pendientes-encolado`;
+        console.log('Fetching pendientes-encolado from:', apiUrl); // LOG para depuración
         setLoading(true);
         axios.get<DataItem[]>(apiUrl)
             .then((response) => {

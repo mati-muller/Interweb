@@ -40,6 +40,7 @@ const HistorialTable: React.FC = () => {
       })
       .catch(() => {
         setError('Error al cargar el historial');
+        setData([]); // Ensure data is always an array
         setLoading(false);
       });
   }, []);
