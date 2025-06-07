@@ -1,15 +1,23 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios'; // Import Axios
 import { config } from '../set/config'; // Import config
 
 export default function Home() {
     const navigate = useNavigate();
+    const [userRole, setUserRole] = useState<string | null>(null);
 
     useEffect(() => {
-        const user = localStorage.getItem('user'); // Check for 'user' in localStorage
-        if (!user) {
-            navigate('/login'); // Redirect to login if user is not found
+        const userStr = localStorage.getItem('user');
+        if (!userStr) {
+            navigate('/login');
+            return;
+        }
+        try {
+            const user = JSON.parse(userStr);
+            setUserRole(user.rol || 'Operador');
+        } catch {
+            setUserRole('Operador');
         }
         // Fetch inventory data and store it in localStorage
         axios.get(`${config.apiUrl}/inventario/data`)
@@ -19,11 +27,49 @@ export default function Home() {
             .catch(error => {
                 console.error('Error fetching inventory data:', error);
             });
-    }); // Removed dependency array to trigger on every render
+    }, [navigate]); // Solo una vez
 
     const handleLogout = () => {
         localStorage.clear();
         navigate('/login');
+    };
+
+    // Mostrar botones según el rol
+    const renderButtons = () => {
+        if (userRole === 'Superadmin') {
+            return (
+                <>
+                    <a href="/inventario" style={{ ...styles.button, textDecoration: 'none' }}>
+                        Ir a módulo de inventario
+                    </a>
+                    <a href="/programa-produccion" style={{ ...styles.button, textDecoration: 'none' }}>
+                        Ir a módulo de programa de producción
+                    </a>
+                    <a href="/edicion" style={{ ...styles.button, textDecoration: 'none' }}>
+                        Ir a módulo de edición de programa de producción
+                    </a>
+                    <a href="/users" style={{ ...styles.button, textDecoration: 'none' }}>
+                        Ir a módulo de gestión de usuarios
+                    </a>
+                    <a href="/historial" style={{ ...styles.button, textDecoration: 'none' }}>
+                        Ir a módulo de historial de procesos
+                    </a>
+                </>
+            );
+        }
+        if (userRole === 'Admin') {
+            return (
+                <a href="/inventario" style={{ ...styles.button, textDecoration: 'none' }}>
+                    Ir a módulo de inventario
+                </a>
+            );
+        }
+        // Operador u otro: solo inventario (puedes ajustar)
+        return (
+            <a href="/inventario" style={{ ...styles.button, textDecoration: 'none' }}>
+                Ir a módulo de inventario
+            </a>
+        );
     };
 
     // Updated styles to remove underline from links
@@ -36,21 +82,7 @@ export default function Home() {
             />
             <h1 style={styles.title}>Menú Principal</h1>
             <div style={styles.grid}>
-                <a href="/inventario" style={{ ...styles.button, textDecoration: 'none' }}>
-                    Ir a módulo de inventario
-                </a>
-                <a href="/programa-produccion" style={{ ...styles.button, textDecoration: 'none' }}>
-                    Ir a módulo de programa de producción
-                </a>
-                <a href="/edicion" style={{ ...styles.button, textDecoration: 'none' }}>
-                    Ir a módulo de edición de programa de producción
-                </a>
-                <a href="/users" style={{ ...styles.button, textDecoration: 'none' }}>
-                    Ir a módulo de gestión de usuarios
-                </a>
-                <a href="/historial" style={{ ...styles.button, textDecoration: 'none' }}>
-                    Ir a módulo de historial de procesos
-                </a>
+                {renderButtons()}
             </div>
             <button style={{ ...styles.button, ...styles.logoutButton }} onClick={handleLogout}>
                 Cerrar Sesión

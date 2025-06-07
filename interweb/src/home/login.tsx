@@ -15,7 +15,10 @@ const Login: React.FC = () => {
     try {
       const response = await axios.post(`${config.apiUrl}/users/login`, { username, password });
       console.log('Login successful:', response.data);
-      localStorage.setItem('user', JSON.stringify(response.data.user)); // Ensure user is stored correctly
+      localStorage.setItem('user', JSON.stringify({
+        ...response.data.user,
+        rol: response.data.rol || 'Operador'
+      })); // Guardar el rol también
       setError(null);
       navigate('/home'); // Redirect to Home
     } catch (err) {

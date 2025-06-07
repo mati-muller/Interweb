@@ -9,8 +9,9 @@ interface User {
     id: number;
     nombre: string;
     apellido: string;
-    username: string; // Added username field
-    procesos?: string[]; // Added procesos field
+    username: string;
+    procesos?: string[];
+    rol?: string; // Añadir rol
 }
 
 export default function UserTable() {
@@ -28,23 +29,27 @@ export default function UserTable() {
     const [registerApellido, setRegisterApellido] = useState('');
     const [registerUsername, setRegisterUsername] = useState('');
     const [registerPassword, setRegisterPassword] = useState('');
+    const [registerRol, setRegisterRol] = useState('Operador'); // Nuevo estado para el rol
+
+    // Cambia la definición de fetchUsers para que TypeScript no infiera mal el tipo de user
+    const fetchUsers = async () => {
+        try {
+            const response = await axios.get(`${config.apiUrl}/users/data`);
+            // Forzamos el tipo a any para evitar problemas de tipado con campos dinámicos
+            const usersWithProcesses = (response.data as any[]).map(user => ({
+                ...user,
+                procesos: typeof user.procesos === 'string' ? JSON.parse(user.procesos || '[]') : [],
+                rol: typeof user.rol === 'string' ? user.rol : 'Operador', // Solo string o default
+            }));
+            setUsers(usersWithProcesses);
+            setLoading(false);
+        } catch (err) {
+            setError('Failed to fetch user data.');
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchUsers = async () => {
-            try {
-                const response = await axios.get<User[]>(`${config.apiUrl}/users/data`);
-                const usersWithProcesses = response.data.map(user => ({
-                    ...user,
-                    procesos: typeof user.procesos === 'string' ? JSON.parse(user.procesos || '[]') : [], // Ensure procesos is parsed correctly
-                }));
-                setUsers(usersWithProcesses);
-                setLoading(false);
-            } catch (err) {
-                setError('Failed to fetch user data.');
-                setLoading(false);
-            }
-        };
-
         fetchUsers();
     }, []);
 
@@ -124,10 +129,11 @@ export default function UserTable() {
                 apellido: registerApellido,
                 username: registerUsername,
                 password: registerPassword,
+                rol: registerRol,
             });
             alert('User registered successfully!');
             setShowRegisterModal(false);
-            // Optionally, you can refresh the user list or add the new user to the state
+            fetchUsers(); // Refresca la tabla para mostrar el rol correcto
         } catch (err) {
             setError('Failed to register user.');
         }
@@ -163,7 +169,8 @@ export default function UserTable() {
                                 <th style={{ padding: '10px', border: '1px solid #ddd' }}>ID</th>
                                 <th style={{ padding: '10px', border: '1px solid #ddd' }}>Nombre Completo</th>
                                 <th style={{ padding: '10px', border: '1px solid #ddd' }}>Username</th> {/* Added column */}
-                                <th style={{ padding: '10px', border: '1px solid #ddd' }}>Acciones</th> {/* Added column */}
+                                <th style={{ padding: '10px', border: '1px solid #ddd' }}>Rol</th> {/* Nueva columna */}
+                                <th style={{ padding: '10px', border: '1px solid #ddd' }}>Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -174,6 +181,9 @@ export default function UserTable() {
                                         {`${user.nombre} ${user.apellido}`}
                                     </td>
                                     <td style={{ padding: '10px', border: '1px solid #ddd', textAlign: 'center' }}>{user.username}</td> {/* Added data */}
+                                    <td style={{ padding: '10px', border: '1px solid #ddd', textAlign: 'center' }}>
+                                        {user.rol || 'Operador'}
+                                    </td> {/* Mostrar rol */}
                                     <td style={{ padding: '10px', border: '1px solid #ddd', textAlign: 'center' }}>
                                         <button
                                             onClick={() => handleDelete(user.id)}
@@ -426,6 +436,15 @@ export default function UserTable() {
                             onChange={e => setRegisterPassword(e.target.value)}
                             style={{ width: '100%', padding: '10px', margin: '10px 0', borderRadius: '4px', border: '1px solid #ddd' }}
                         />
+                        <select
+                            value={registerRol}
+                            onChange={e => setRegisterRol(e.target.value)}
+                            style={{ width: '100%', padding: '10px', margin: '10px 0', borderRadius: '4px', border: '1px solid #ddd' }}
+                        >
+                            <option value="Superadmin">Superadmin</option>
+                            <option value="Admin">Admin</option>
+                            <option value="Operador">Operador</option>
+                        </select>
                         <div style={{ marginTop: '20px' }}>
                             <button
                                 onClick={handleRegisterUser}
