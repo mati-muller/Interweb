@@ -12,7 +12,7 @@ interface DataItem {
     FECHA_ENTREGA: string;
     PROCESO: string;
     DETPROD: string;
-    CANTPROD: number;
+    NVCANT: number;
     CANT_A_PROD: number;
     CANT_A_FABRICAR?: number;
     transformedPlacas?: string[]; // Add transformedPlacas property
@@ -587,7 +587,7 @@ export default function Troquel() {
                                     <td style={{ padding: '10px', border: '1px solid #ddd' }}>{item.PROCESO}</td>
                                     <td style={{ padding: '10px', border: '1px solid #ddd' }}>{item.DETPROD}</td>
                                     <td style={{ padding: '10px', border: '1px solid #ddd' }}>{item.CANT_A_PROD}</td>
-                                    <td style={{ padding: '10px', border: '1px solid #ddd' }}>{item.CANTPROD}</td>
+                                    <td style={{ padding: '10px', border: '1px solid #ddd' }}>{item.NVCANT}</td>
                                 </tr>
                             ))}
                         </tbody>

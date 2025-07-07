@@ -147,7 +147,7 @@ const ProcesosTable: React.FC = () => {
                                                                 <td style={{ padding: '8px', border: '1px solid #ddd' }}>{proceso.ESTADO_PROC}</td>
                                                                 <td style={{ padding: '8px', border: '1px solid #ddd' }}>{proceso.CANT_A_PROD}</td>
                                                                 <td style={{ padding: '8px', border: '1px solid #ddd' }}>{proceso.cantidad_producida}</td>
-                                                                <td style={{ padding: '8px', border: '1px solid #ddd' }}>{proceso.CANTPROD}</td>
+                                                                <td style={{ padding: '8px', border: '1px solid #ddd' }}>{proceso.NVCANT}</td>
                                                                 <td style={{ padding: '8px', border: '1px solid #ddd' }}>{proceso.FECHA_ENTREGA}</td>
                                                             </tr>
                                                         ))}

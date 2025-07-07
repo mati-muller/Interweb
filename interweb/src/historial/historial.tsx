@@ -4,8 +4,8 @@ import { config } from '../set/config'; // Import the config file
 
 interface HistorialItem {
   CANTIDAD: number;
-  CODPROD: string;
-  DETPROD: string;
+  CODPROD: string | null;
+  DETPROD: string | null;
   FECHA: string | null;
   FECHA_ENTREGA: string;
   ID: number;
@@ -13,15 +13,16 @@ interface HistorialItem {
   NUMERO_PERSONAS: number;
   NVCANT: number;
   NVNUMERO: number;
-  PLACA: string;
-  PLACAS_BUENAS: string;
-  PLACAS_MALAS: string;
-  PLACAS_USADAS: string;
-  PROCESO: string;
-  STOCK: string;
+  PLACA: string | null;
+  PLACAS_BUENAS: string | null;
+  PLACAS_MALAS: string | null;
+  PLACAS_USADAS: string | null;
+  PROCESO: string | null;
+  STOCK: string | null;
   STOCK_CANT: number;
   TIEMPO_TOTAL: number;
-  USER: string;
+  USER: string | null;
+  despunte: boolean;
 }
 
 const API_URL = `${config.apiUrl}/reportes/historial`;
@@ -46,8 +47,8 @@ const HistorialTable: React.FC = () => {
   }, []);
 
   const filteredData = data.filter(item =>
-    item.CODPROD.toLowerCase().includes(search.toLowerCase()) ||
-    item.DETPROD.toLowerCase().includes(search.toLowerCase())
+    (item.CODPROD?.toLowerCase() || '').includes(search.toLowerCase()) ||
+    (item.DETPROD?.toLowerCase() || '').includes(search.toLowerCase())
   );
 
   if (loading) return <div>Cargando...</div>;
@@ -81,6 +82,7 @@ const HistorialTable: React.FC = () => {
             <th style={{ border: '1px solid #ccc', padding: 8 }}>Tiempo Total</th>
             <th style={{ border: '1px solid #ccc', padding: 8 }}>Stock</th>
             <th style={{ border: '1px solid #ccc', padding: 8 }}>Stock Cant</th>
+            <th style={{ border: '1px solid #ccc', padding: 8 }}>Despunte</th>
             <th style={{ border: '1px solid #ccc', padding: 8 }}>Fecha Entrega</th>
             <th style={{ border: '1px solid #ccc', padding: 8 }}>Usuario</th>
           </tr>
@@ -91,20 +93,26 @@ const HistorialTable: React.FC = () => {
               <td style={{ border: '1px solid #ccc', padding: 8 }}>{item.FECHA ? item.FECHA : '-'}</td>
               <td style={{ border: '1px solid #ccc', padding: 8 }}>{item.ID}</td>
               <td style={{ border: '1px solid #ccc', padding: 8 }}>{item.NVNUMERO}</td>
-              <td style={{ border: '1px solid #ccc', padding: 8 }}>{item.DETPROD}</td>
-              <td style={{ border: '1px solid #ccc', padding: 8 }}>{item.CODPROD}</td>
-              <td style={{ border: '1px solid #ccc', padding: 8 }}>{item.PROCESO}</td>
+              <td style={{ border: '1px solid #ccc', padding: 8 }}>{item.DETPROD || '-'}</td>
+              <td style={{ border: '1px solid #ccc', padding: 8 }}>{item.CODPROD || '-'}</td>
+              <td style={{ border: '1px solid #ccc', padding: 8 }}>{item.PROCESO || '-'}</td>
               <td style={{ border: '1px solid #ccc', padding: 8 }}>{item.CANTIDAD}</td>
-              <td style={{ border: '1px solid #ccc', padding: 8 }}>{item.PLACA}</td>
-              <td style={{ border: '1px solid #ccc', padding: 8 }}>{item.PLACAS_USADAS}</td>
-              <td style={{ border: '1px solid #ccc', padding: 8 }}>{item.PLACAS_BUENAS}</td>
-              <td style={{ border: '1px solid #ccc', padding: 8 }}>{item.PLACAS_MALAS}</td>
+              <td style={{ border: '1px solid #ccc', padding: 8 }}>{item.PLACA || '-'}</td>
+              <td style={{ border: '1px solid #ccc', padding: 8 }}>{item.PLACAS_USADAS || '-'}</td>
+              <td style={{ border: '1px solid #ccc', padding: 8 }}>{item.PLACAS_BUENAS || '-'}</td>
+              <td style={{ border: '1px solid #ccc', padding: 8 }}>{item.PLACAS_MALAS || '-'}</td>
               <td style={{ border: '1px solid #ccc', padding: 8 }}>{item.NUMERO_PERSONAS}</td>
               <td style={{ border: '1px solid #ccc', padding: 8 }}>{item.TIEMPO_TOTAL}</td>
-              <td style={{ border: '1px solid #ccc', padding: 8 }}>{item.STOCK}</td>
+              <td style={{ border: '1px solid #ccc', padding: 8 }}>{item.STOCK || '-'}</td>
               <td style={{ border: '1px solid #ccc', padding: 8 }}>{item.STOCK_CANT}</td>
+              <td style={{ border: '1px solid #ccc', padding: 8 }}>
+                {item.despunte ? 
+                  <span style={{ color: '#28a745', fontWeight: 'bold' }}>✓ Sí</span> : 
+                  <span style={{ color: '#dc3545' }}>✗ No</span>
+                }
+              </td>
               <td style={{ border: '1px solid #ccc', padding: 8 }}>{item.FECHA_ENTREGA}</td>
-              <td style={{ border: '1px solid #ccc', padding: 8 }}>{item.USER}</td>
+              <td style={{ border: '1px solid #ccc', padding: 8 }}>{item.USER || '-'}</td>
             </tr>
           ))}
         </tbody>
