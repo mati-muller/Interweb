@@ -13,10 +13,10 @@ interface HistorialItem {
   NUMERO_PERSONAS: number;
   NVCANT: number;
   NVNUMERO: number;
-  PLACA: string | null;
-  PLACAS_BUENAS: string | null;
-  PLACAS_MALAS: string | null;
-  PLACAS_USADAS: string | null;
+  PLACA: string[] | null;
+  PLACAS_BUENAS: number[] | null;
+  PLACAS_MALAS: number[] | null;
+  PLACAS_USADAS: number[] | null;
   PROCESO: string | null;
   STOCK: string | null;
   STOCK_CANT: number;
@@ -97,10 +97,18 @@ const HistorialTable: React.FC = () => {
               <td style={{ border: '1px solid #ccc', padding: 8 }}>{item.CODPROD || '-'}</td>
               <td style={{ border: '1px solid #ccc', padding: 8 }}>{item.PROCESO || '-'}</td>
               <td style={{ border: '1px solid #ccc', padding: 8 }}>{item.CANTIDAD}</td>
-              <td style={{ border: '1px solid #ccc', padding: 8 }}>{item.PLACA || '-'}</td>
-              <td style={{ border: '1px solid #ccc', padding: 8 }}>{item.PLACAS_USADAS || '-'}</td>
-              <td style={{ border: '1px solid #ccc', padding: 8 }}>{item.PLACAS_BUENAS || '-'}</td>
-              <td style={{ border: '1px solid #ccc', padding: 8 }}>{item.PLACAS_MALAS || '-'}</td>
+              <td style={{ border: '1px solid #ccc', padding: 8 }}>
+                {item.PLACA ? item.PLACA.join(', ') : '-'}
+              </td>
+              <td style={{ border: '1px solid #ccc', padding: 8 }}>
+                {item.PLACAS_USADAS ? item.PLACAS_USADAS.join(', ') : '-'}
+              </td>
+              <td style={{ border: '1px solid #ccc', padding: 8 }}>
+                {item.PLACAS_BUENAS ? item.PLACAS_BUENAS.join(', ') : '-'}
+              </td>
+              <td style={{ border: '1px solid #ccc', padding: 8 }}>
+                {item.PLACAS_MALAS ? item.PLACAS_MALAS.join(', ') : '-'}
+              </td>
               <td style={{ border: '1px solid #ccc', padding: 8 }}>{item.NUMERO_PERSONAS}</td>
               <td style={{ border: '1px solid #ccc', padding: 8 }}>{item.TIEMPO_TOTAL}</td>
               <td style={{ border: '1px solid #ccc', padding: 8 }}>{item.STOCK || '-'}</td>
