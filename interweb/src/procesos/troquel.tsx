@@ -726,8 +726,8 @@ export default function Troquel() {
                                 fontSize: '16px',
                             }}
                         >
-                            <option value="Multiple 1">Multiple 1</option>
-                            <option value="Multiple 2">Multiple 2</option>
+                            <option value="Troqueladora Grande">Troqueladora Grande</option>
+                            <option value="Troqueladora Chica">Troqueladora Chica</option>
                         </select>
                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                             <button
