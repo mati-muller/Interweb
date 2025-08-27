@@ -111,7 +111,13 @@ const ProcesosTable: React.FC = () => {
                     </thead>
                     <tbody>
                         {data
-                            .filter(item => item.NOMAUX.toLowerCase().includes(search.toLowerCase()))
+                            .filter(item => {
+                                // Exclude items where every proceso is 'LISTO'
+                                const procesos = Array.isArray(item.procesos) ? item.procesos : [];
+                                const allListo = procesos.length > 0 && procesos.every((p: any) => (p.ESTADO_PROC || '').toString().toLowerCase() === 'listo');
+                                if (allListo) return false;
+                                return item.NOMAUX.toLowerCase().includes(search.toLowerCase());
+                            })
                             .map((item, index) => (
                                 <React.Fragment key={index}>
                                     <tr

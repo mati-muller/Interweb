@@ -1,0 +1,187 @@
+INSTRUCTIVO DE USO - APP MÓVIL (InterApp) Y WEB (Interweb)
+
+Resumen
+Este instructivo ampliado explica con detalle cómo usar la aplicación web (`Interweb`) y la app móvil (`InterApp`). Incluye:
+- Paso a paso para usuarios (login, creación/edición/estado de órdenes).
+- Descripción de las rutas/páginas de la web y qué hace cada una.
+- Flujo de trabajo detallado por proceso (ej.: encolado: programación por cantidad).
+- Instrucciones detalladas para la app móvil (pantallas, flujo, buenas prácticas).
+
+Índice rápido
+1) Acceso y navegación
+2) Rutas de la web (explicadas una por una)
+3) Procesos: paso a paso por cada subproceso
+   - Calado
+   - Emplac
+   - Encol (encolado) — incluye programación por cantidad
+   - Impresión
+   - Mult
+   - Pegado
+   - Plizado
+   - Troquel
+   - Troz
+4) Editores y pantallas de edición (web y app)
+5) Inventario (uso y rutas)
+6) Historial y auditoría
+7) Usuarios y roles
+8) Configuración y `src/set/config.ts`
+9) Problemas comunes y soluciones rápidas
+
+1) Acceso y navegación (paso a paso)
+- Web (Interweb):
+  1. Abrir la URL de la aplicación.
+  2. En `/login` introducir usuario y contraseña.
+  3. Si el login es correcto, se redirige a `/home`.
+  4. Desde `/home` usar el menú para acceder a `/inventario`, `/procesos` o `/historial`.
+- App (InterApp):
+  1. Abrir la app (Expo/Android/iOS).
+  2. En la pestaña "Login" introducir credenciales.
+  3. Una vez autenticado, usar las pestañas inferiores para ir a Home, Inventario o a cada proceso.
+
+2) Rutas de la web: qué hace cada una (detallado)
+Nota: las rutas cliente están mapeadas por los archivos en `interweb/src`. A continuación se describen las rutas y su comportamiento esperado.
+
+- `/login` — Pantalla de autenticación.
+  - Campos: usuario, contraseña.
+  - Acción: envía credenciales al backend; en caso de éxito guarda token y redirige a `/home`.
+
+- `/home` — Dashboard principal.
+  - Muestra métricas rápidas, órdenes asignadas, accesos rápidos a procesos y alertas.
+  - Acciones: abrir detalles de una orden, ir a la lista completa de procesos.
+
+- `/inventario` — Gestión de inventario.
+  - Listado paginado de ítems.
+  - Filtros: referencia, código, estado, ubicación.
+  - Acciones por elemento: Ver detalle (`/inventario/:id`), Editar (`/inventario/:id/edit`), Crear nuevo (`/inventario/new`), Eliminar.
+  - Exportar/Importar: botón para exportar CSV y para subir CSV (importar) si la UI lo permite.
+
+- `/procesos` — Página general que lista todos los procesos o redirige a subrutas.
+  - Subrutas por proceso (ejemplos de rutas convencionales):
+    - `/procesos/calado` — Lista de órdenes de calado.
+    - `/procesos/emplac` — Lista de órdenes de emplac.
+    - `/procesos/encol` — Lista y programación de encolado.
+    - `/procesos/impresion` — Órdenes de impresión.
+    - `/procesos/mult` — Módulo mult.
+    - `/procesos/pegado` — Órdenes de pegado.
+    - `/procesos/plizado` — Órdenes de plizado.
+    - `/procesos/troquel` — Órdenes de troquel.
+    - `/procesos/troz` — Órdenes de troz.
+  - En cada subruta hay una lista de órdenes con columnas típicas: ID, referencia, cantidad, estado, fecha, acciones.
+
+- `/procesos/:proceso/new` o botón "Nueva" — Crear nueva operación en ese proceso.
+  - Formulario con campos específicos del proceso (referencia, cantidad, prioridad, fecha de entrega, observaciones, operador asignado).
+
+- `/procesos/:proceso/:id/edit` — Editar una operación existente.
+  - Campos: todos los del formulario de creación más campos de seguimiento (estado, avance, registros de tiempo).
+
+- `/historial` — Log/auditoría de acciones.
+  - Filtrar por fecha, usuario, módulo, tipo de acción (crear/editar/borrar/estado).
+
+- `/users` — Gestión de usuarios (solo para roles con permiso).
+  - Crear/editar/eliminar usuarios, asignar roles.
+
+- `/settings` o `/set` — Configuración visible en UI.
+  - Ajustes de filtros por defecto, parámetros de visualización, y enlaces a configuración avanzada almacenada en `src/set/config.ts`.
+
+3) Procesos: paso a paso por cada subproceso (qué hace y ejemplos)
+Nota: Aquí describimos el flujo operativo típico que verás en la UI de cada proceso.
+
+- Calado (ruta: `/procesos/calado`)
+  - Propósito: operaciones de cortado/calado de materiales.
+  - Flujo: ver lista → seleccionar orden → ingresar parámetros de producción (medidas, tool, observaciones) → marcar inicio/fin → registrar cantidad producida.
+
+- Emplac (ruta: `/procesos/emplac`)
+  - Propósito: procesos de enplacado/emplaque.
+  - Flujo: similar a calado; incluye campos de empaque, tipo de pallet, y destino.
+
+- Encol / Encolado (ruta: `/procesos/encol`)
+  - Propósito: programación y ejecución de operaciones de encolado.
+  - Funcionalidad clave: programar por cantidad.
+  - Paso a paso (programar por cantidad):
+    1. Entrar a `/procesos/encol` y seleccionar "Nueva" o seleccionar una orden existente.
+    2. En el formulario, seleccionar la referencia del producto a encolar.
+    3. Campo "Cantidad total": indica la cantidad total que se desea producida (por ejemplo, 1000 unidades).
+    4. Campo "Tamaño de lote" o "Cantidad por tanda": si se desea dividir la producción en tandas, indicar la cantidad por tanda (por ejemplo, 200). La app calculará el número de tandas (en este ejemplo, 5).
+    5. Definir fechas/horarios y/o prioridad. Opcional: asignar operador o línea de producción.
+    6. Guardar la programación: el sistema crea N registros o una operación con subtareas según la implementación del backend.
+    7. En ejecución: cada tanda se marca como iniciada/completada desde la UI hasta completar la cantidad total.
+  - Buenas prácticas: cuando programes por cantidad, confirmar stock de materias primas y validar tiempos estimados para evitar solapamientos.
+
+- Impresión (ruta: `/procesos/impresion`)
+  - Propósito: gestionar tiradas de impresión.
+  - Flujo: seleccionar trabajo, definir colores, pruebas, y registrar aprobación de calidad.
+
+- Mult, Pegado, Plizado, Troquel, Troz (rutas análogas)
+  - Cada módulo maneja órdenes con campos propios; el flujo general es crear → asignar → ejecutar → cerrar.
+
+4) Editores y pantallas de edición (web y app)
+- Web: `src/procesos/edit/*` contiene componentes `editX.tsx` con formularios segmentados por proceso. Estos formularios incluyen validaciones en el frontend y envían peticiones al backend.
+- App: pantallas equivalentes en `app/(tabs)/` y subrutas; la experiencia móvil prioriza campos esenciales y flujos rápidos para operarios.
+- Reglas habituales en formularios:
+  - Campos obligatorios no permiten guardar.
+  - Validaciones: cantidades > 0, fechas válidas, referencias existentes.
+
+5) Inventario (uso y rutas)
+- Ruta principal: `/inventario`.
+- Acciones comunes:
+  - Consultar stock por referencia.
+  - Editar stock manualmente (`/inventario/:id/edit`).
+  - Registrar entradas/salidas (movimientos) si la UI lo permite.
+  - Exportar CSV para auditoría.
+
+6) Historial y auditoría
+- `/historial` muestra todas las acciones relevantes. Cada entrada debe incluir: fecha/hora, usuario, acción, módulo y cambio puntual.
+
+7) Usuarios y roles
+- `/users` (solo administradores): crear, editar, eliminar usuarios; asignar roles (admin, operario, consulta).
+- Recomendación: dar menos permisos de inicio y aumentar según necesidad.
+
+8) Configuración y `src/set/config.ts`
+- `src/set/config.ts` contiene opciones visibles en UI (timezones, filtros por defecto, rutas de API que la app utiliza en desarrollo/producción). Cambios en este archivo pueden requerir rebuild o recarga.
+
+9) Problemas comunes y soluciones rápidas
+- No puedo iniciar sesión: verificar backend, revisar la consola (CORS, 401), comprobar que `ApiGo` esté corriendo.
+- Edición no guarda: revisar respuesta del backend en la pestaña Network; validar esquema enviado.
+- PDF/Export no descarga: comprobar permisos de archivo en servidor y endpoints de generación de reportes.
+
+Instructivo detallado para la App móvil (InterApp)
+Esta sección detalla paso a paso la experiencia para un operario que usa la app en planta.
+
+1) Login y sesión
+- Abrir la app → Login (usuario/contraseña). Si el token expira, la app redirige a login.
+
+2) Estructura de la app (pantallas / pestañas)
+- Pestaña Home: resumen y accesos rápidos.
+- Pestaña Inventario: búsquedas rápidas y consulta de stock.
+- Pestañas por proceso: calado, emplac, encol, impresion, mult, pegado, plizado, troquel, troz. Cada pestaña lista órdenes asignadas.
+
+3) Workflow típico en la app (ejemplo: realizar una tanda de encolado)
+  1. Abrir pestaña Encol.
+  2. Seleccionar operación programada o crear nueva.
+  3. Ver detalles: cantidad total, cantidad por tanda, observaciones.
+  4. Iniciar tanda: marcar "Iniciar" — se registra hora de inicio y se notifica al backend.
+  5. Registrar producción: ingresar cantidad producida en la tanda.
+  6. Marcar "Completar tanda". Si quedan más tandas, repetir; si se completó la cantidad total, marcar la orden como "Completada".
+
+4) Edición rápida desde la app
+- Solo campos esenciales para no entorpecer la operación: cantidad actual, observaciones, estado.
+
+5) Notificaciones y sincronización
+- La app debe sincronizarse con el backend; si está offline, guardar cambios en cache y sincronizar al reconectarse.
+
+6) Buenas prácticas para operarios
+- Registrar cantidades reales, no estimadas.
+- Documentar incidencias en observaciones.
+- No cerrar la app mientras registra una tanda si hay riesgo de pérdida de datos.
+
+Notas para desarrolladores y administradores
+- Revisa `interweb/src` para ver los componentes y `Interapp/app` para la experiencia móvil. Para entender las APIs, consulta `ApiGo/routes` y `models`.
+- Implementa pruebas end-to-end para flujos críticos como programación por cantidad en `encol`.
+
+Contacto y siguientes pasos
+Si quieres, genero:
+- Una versión PDF con índice y encabezados con formato profesional.
+- Un documento separado con ejemplos de requests/JSON para cada endpoint del backend.
+
+---
+Fin del instructivo.

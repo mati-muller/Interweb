@@ -319,7 +319,7 @@ export default function Pegado() {
                                     {index + 1}.
                                 </span>
                                 <span style={{ flex: 1, fontSize: '14px' }}>
-                                    <strong>Producto:</strong> {item.DETPROD} | <strong>Cliente:</strong> {item.NOMAUX} | <strong>Cantidad:</strong> {item.CANT_A_FABRICAR}
+                                    <strong>Nota de venta:</strong> {item.NVNUMERO} | <strong>Producto:</strong> {item.DETPROD} | <strong>Cliente:</strong> {item.NOMAUX} | <strong>Cantidad:</strong> {item.CANT_A_FABRICAR}
                                 </span>
                                 <button
                                     style={{ marginRight: '5px', padding: '5px 10px', backgroundColor: '#4caf50', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }}

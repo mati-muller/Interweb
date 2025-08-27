@@ -379,7 +379,7 @@ export default function Encol() {
                                     {index + 1}.
                                 </span>
                                 <span style={{ flex: 1, fontSize: '14px' }}>
-                                    <strong>Producto:</strong> {item.DETPROD} | <strong>Cliente:</strong> {item.NOMAUX} | <strong>Cantidad:</strong> {item.CANT_A_FABRICAR}
+                                    <strong>Nota de venta:</strong> {item.NVNUMERO} | <strong>Producto:</strong> {item.DETPROD} | <strong>Cliente:</strong> {item.NOMAUX} | <strong>Cantidad:</strong> {item.CANT_A_FABRICAR}
                                 </span>
                                 <button
                                     style={{
@@ -466,7 +466,7 @@ export default function Encol() {
                                     {index + 1}.
                                 </span>
                                 <span style={{ flex: 1, fontSize: '14px' }}>
-                                    <strong>Producto:</strong> {item.DETPROD} | <strong>Cliente:</strong> {item.NOMAUX} | <strong>Cantidad:</strong> {item.CANT_A_FABRICAR}
+                                    <strong>Nota de venta:</strong> {item.NVNUMERO} | <strong>Producto:</strong> {item.DETPROD} | <strong>Cliente:</strong> {item.NOMAUX} | <strong>Cantidad:</strong> {item.CANT_A_FABRICAR}
                                 </span>
                                 <button
                                     style={{
