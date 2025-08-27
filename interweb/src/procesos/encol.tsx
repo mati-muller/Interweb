@@ -46,6 +46,18 @@ export default function Encol() {
     const [encolado2Data, setEncolado2Data] = useState<DataItem[]>([]); // Data from /app/encolado2
     const [showEncoladoTable, setShowEncoladoTable] = useState<'none' | 'encolado' | 'encolado2'>('none');
 
+    // Auto-remove items with zero requested quantity from selected lists
+    useEffect(() => {
+        setSelectedItemsEncolado1((prev) => {
+            const filtered = prev.filter((it) => Number(it.CANT_A_FABRICAR) > 0);
+            return filtered.length === prev.length ? prev : filtered;
+        });
+        setSelectedItemsEncolado2((prev) => {
+            const filtered = prev.filter((it) => Number(it.CANT_A_FABRICAR) > 0);
+            return filtered.length === prev.length ? prev : filtered;
+        });
+    }, [selectedItemsEncolado1, selectedItemsEncolado2]);
+
     const fetchData = () => {
         const apiUrl = `${API_BASE_URL}/procesos/pendientes-encolado`;
         console.log('Fetching pendientes-encolado from:', apiUrl); // LOG para depuración

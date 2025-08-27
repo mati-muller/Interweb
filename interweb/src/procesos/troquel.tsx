@@ -283,6 +283,18 @@ export default function Troquel() {
         fetchData();
     }, []);
 
+    // Auto-remove any selected items with zero CANT_A_FABRICAR from both troquel selected lists
+    useEffect(() => {
+        setSelectedItemsEncolado1((prev) => {
+            const filtered = prev.filter((it) => Number(it.CANT_A_FABRICAR) > 0);
+            return filtered.length === prev.length ? prev : filtered;
+        });
+        setSelectedItemsEncolado2((prev) => {
+            const filtered = prev.filter((it) => Number(it.CANT_A_FABRICAR) > 0);
+            return filtered.length === prev.length ? prev : filtered;
+        });
+    }, [selectedItemsEncolado1, selectedItemsEncolado2]);
+
     // Render encolado/encolado2 GET results directamente en la tabla de selección
     useEffect(() => {
         const fetchAndSetEncolados = async () => {

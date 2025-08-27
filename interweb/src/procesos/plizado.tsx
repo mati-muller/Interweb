@@ -261,6 +261,15 @@ export default function Plizado() {
         fetchPlizado();
     }, []);
 
+    // Auto-remove any selected items with zero CANT_A_FABRICAR
+    useEffect(() => {
+        if (selectedItems.length === 0) return;
+        setSelectedItems((prev) => {
+            const filtered = prev.filter((it) => Number(it.CANT_A_FABRICAR) > 0);
+            return filtered.length === prev.length ? prev : filtered;
+        });
+    }, [selectedItems]);
+
     const filteredData = data.filter((item) =>
         item.NOMAUX.toLowerCase().includes(searchQuery.toLowerCase())
     ); // Filter data based on search query
