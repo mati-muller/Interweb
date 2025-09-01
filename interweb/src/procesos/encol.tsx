@@ -463,7 +463,7 @@ export default function Encol() {
                     }}
                     onClick={() => handleSubmitSelected('Encolado 1')}
                 >
-                    Subir Seleccionados - Encolado 1
+                    Actualizar Programa - Encolado 1
                 </button>
             </div>
             <div style={{ marginBottom: '20px', padding: '15px', border: '1px solid #ddd', borderRadius: '5px', backgroundColor: '#f9f9f9' }}>
@@ -552,7 +552,7 @@ export default function Encol() {
                     }}
                     onClick={() => handleSubmitSelected('Encolado 2')}
                 >
-                    Subir Seleccionados - Encolado 2
+                    Actualizar Programa - Encolado 2
                 </button>
             </div>
             {loading ? (

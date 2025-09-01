@@ -460,7 +460,7 @@ export default function Troquel() {
                     }}
                     onClick={() => handleSubmitSelected('Troqueladora Grande')}
                 >
-                    Subir Seleccionados - Troqueladora Grande
+                    Actualizar Programa - Troqueladora Grande
                 </button>
             </div>
             <div style={{ marginBottom: '20px', padding: '15px', border: '1px solid #ddd', borderRadius: '5px', backgroundColor: '#f9f9f9' }}>
@@ -549,7 +549,7 @@ export default function Troquel() {
                     }}
                     onClick={() => handleSubmitSelected('Troqueladora Chica')}
                 >
-                    Subir Seleccionados - Troqueladora Chica
+                    Actualizar Programa - Troqueladora Chica
                 </button>
             </div>
             {loading ? (

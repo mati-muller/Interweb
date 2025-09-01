@@ -462,7 +462,7 @@ export default function Mult() {
                     }}
                     onClick={() => handleSubmitSelected('Multiple 1')}
                 >
-                    Subir Seleccionados - Multiple 1
+                    Actualizar Programa - Multiple 1
                 </button>
             </div>
             <div style={{ marginBottom: '20px', padding: '15px', border: '1px solid #ddd', borderRadius: '5px', backgroundColor: '#f9f9f9' }}>
@@ -551,7 +551,7 @@ export default function Mult() {
                     }}
                     onClick={() => handleSubmitSelected('Multiple 2')}
                 >
-                    Subir Seleccionados - Multiple 2
+                    Actualizar Programa - Multiple 2
                 </button>
             </div>
             {loading ? (

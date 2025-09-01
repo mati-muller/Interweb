@@ -355,7 +355,7 @@ export default function Pegado() {
                     style={{ marginTop: '15px', padding: '10px', backgroundColor: '#c8a165', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer', width: '100%', fontSize: '16px' }}
                     onClick={handleSubmitSelected}
                 >
-                    Subir Seleccionados - Pegado
+                    Actualizar Programa - Pegado
                 </button>
             </div>
             {loading ? (
