@@ -152,10 +152,7 @@ export default function Pegado() {
     };
 
     const handleSubmitSelected = () => {
-        if (selectedItems.length === 0) {
-            alert('No items selected.');
-            return;
-        }
+
         const payload = selectedItems.map((item) => ({
             ID: item.ID,
             CANT_A_FABRICAR: item.CANT_A_FABRICAR,
@@ -318,9 +315,11 @@ export default function Pegado() {
                     fontSize: '16px',
                 }}
             />
-            {selectedItems.length > 0 && (
-                <div style={{ marginBottom: '20px', padding: '15px', border: '1px solid #ddd', borderRadius: '5px', backgroundColor: '#f9f9f9' }}>
-                    <h3 style={{ marginBottom: '15px', color: '#333' }}>Elementos Seleccionados - Pegado</h3>
+            <div style={{ marginBottom: '20px', padding: '15px', border: '1px solid #ddd', borderRadius: '5px', backgroundColor: '#f9f9f9' }}>
+                <h3 style={{ marginBottom: '15px', color: '#333' }}>Elementos Seleccionados - Pegado</h3>
+                {selectedItems.length === 0 ? (
+                    <p style={{ color: '#666', fontStyle: 'italic' }}>No hay elementos seleccionados.</p>
+                ) : (
                     <ul style={{ listStyleType: 'none', padding: 0 }}>
                         {selectedItems.map((item, index) => (
                             <li key={item.ID} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px', backgroundColor: '#fff', padding: '10px', borderRadius: '5px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}>
@@ -351,14 +350,14 @@ export default function Pegado() {
                             </li>
                         ))}
                     </ul>
-                    <button
-                        style={{ marginTop: '15px', padding: '10px', backgroundColor: '#c8a165', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer', width: '100%', fontSize: '16px' }}
-                        onClick={handleSubmitSelected}
-                    >
-                        Subir Seleccionados - Pegado
-                    </button>
-                </div>
-            )}
+                )}
+                <button
+                    style={{ marginTop: '15px', padding: '10px', backgroundColor: '#c8a165', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer', width: '100%', fontSize: '16px' }}
+                    onClick={handleSubmitSelected}
+                >
+                    Subir Seleccionados - Pegado
+                </button>
+            </div>
             {loading ? (
                 <p>Loading...</p>
             ) : error ? (

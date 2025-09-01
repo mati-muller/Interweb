@@ -181,12 +181,6 @@ export default function Troquel() {
 
     const handleSubmitSelected = (encoladoType: 'Troqueladora Grande' | 'Troqueladora Chica') => {
         const selectedItems = encoladoType === 'Troqueladora Grande' ? selectedItemsEncolado1 : selectedItemsEncolado2;
-
-        if (selectedItems.length === 0) {
-            alert('No items selected.');
-            return;
-        }
-
         const payload = selectedItems.map((item) => ({
             ID: item.ID,
             CANT_A_FABRICAR: item.CANT_A_FABRICAR,
@@ -380,9 +374,11 @@ export default function Troquel() {
                     fontSize: '16px',
                 }}
             />
-            {selectedItemsEncolado1.length > 0 && (
-                <div style={{ marginBottom: '20px', padding: '15px', border: '1px solid #ddd', borderRadius: '5px', backgroundColor: '#f9f9f9' }}>
-                    <h3 style={{ marginBottom: '15px', color: '#333' }}>Elementos Seleccionados - Troquelado Grande</h3>
+            <div style={{ marginBottom: '20px', padding: '15px', border: '1px solid #ddd', borderRadius: '5px', backgroundColor: '#f9f9f9' }}>
+                <h3 style={{ marginBottom: '15px', color: '#333' }}>Elementos Seleccionados - Troquelado Grande</h3>
+                {selectedItemsEncolado1.length === 0 ? (
+                    <p style={{ color: '#666', fontStyle: 'italic' }}>No hay elementos seleccionados.</p>
+                ) : (
                     <ul style={{ listStyleType: 'none', padding: 0 }}>
                         {selectedItemsEncolado1.map((item, index) => (
                             <li key={item.ID} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px', backgroundColor: '#fff', padding: '10px', borderRadius: '5px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}>
@@ -449,27 +445,29 @@ export default function Troquel() {
                             </li>
                         ))}
                     </ul>
-                    <button
-                        style={{
-                            marginTop: '15px',
-                            padding: '10px',
-                            backgroundColor: '#c8a165', // Updated color
-                            color: '#fff',
-                            border: 'none',
-                            borderRadius: '5px',
-                            cursor: 'pointer',
-                            width: '100%',
-                            fontSize: '16px',
-                        }}
-                        onClick={() => handleSubmitSelected('Troqueladora Grande')}
-                    >
-                        Subir Seleccionados - Troqueladora Grande
-                    </button>
-                </div>
-            )}
-            {selectedItemsEncolado2.length > 0 && (
-                <div style={{ marginBottom: '20px', padding: '15px', border: '1px solid #ddd', borderRadius: '5px', backgroundColor: '#f9f9f9' }}>
-                    <h3 style={{ marginBottom: '15px', color: '#333' }}>Elementos Seleccionados - Troqueladora Chica</h3>
+                )}
+                <button
+                    style={{
+                        marginTop: '15px',
+                        padding: '10px',
+                        backgroundColor: '#c8a165', // Updated color
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '5px',
+                        cursor: 'pointer',
+                        width: '100%',
+                        fontSize: '16px',
+                    }}
+                    onClick={() => handleSubmitSelected('Troqueladora Grande')}
+                >
+                    Subir Seleccionados - Troqueladora Grande
+                </button>
+            </div>
+            <div style={{ marginBottom: '20px', padding: '15px', border: '1px solid #ddd', borderRadius: '5px', backgroundColor: '#f9f9f9' }}>
+                <h3 style={{ marginBottom: '15px', color: '#333' }}>Elementos Seleccionados - Troqueladora Chica</h3>
+                {selectedItemsEncolado2.length === 0 ? (
+                    <p style={{ color: '#666', fontStyle: 'italic' }}>No hay elementos seleccionados.</p>
+                ) : (
                     <ul style={{ listStyleType: 'none', padding: 0 }}>
                         {selectedItemsEncolado2.map((item, index) => (
                             <li key={item.ID} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px', backgroundColor: '#fff', padding: '10px', borderRadius: '5px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}>
@@ -536,24 +534,24 @@ export default function Troquel() {
                             </li>
                         ))}
                     </ul>
-                    <button
-                        style={{
-                            marginTop: '15px',
-                            padding: '10px',
-                            backgroundColor: '#c8a165', // Updated color
-                            color: '#fff',
-                            border: 'none',
-                            borderRadius: '5px',
-                            cursor: 'pointer',
-                            width: '100%',
-                            fontSize: '16px',
-                        }}
-                        onClick={() => handleSubmitSelected('Troqueladora Chica')}
-                    >
-                        Subir Seleccionados - Troqueladora Chica
-                    </button>
-                </div>
-            )}
+                )}
+                <button
+                    style={{
+                        marginTop: '15px',
+                        padding: '10px',
+                        backgroundColor: '#c8a165', // Updated color
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '5px',
+                        cursor: 'pointer',
+                        width: '100%',
+                        fontSize: '16px',
+                    }}
+                    onClick={() => handleSubmitSelected('Troqueladora Chica')}
+                >
+                    Subir Seleccionados - Troqueladora Chica
+                </button>
+            </div>
             {loading ? (
                 <p>Loading...</p>
             ) : error ? (

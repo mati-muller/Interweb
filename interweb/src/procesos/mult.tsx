@@ -194,10 +194,6 @@ export default function Mult() {
     const handleSubmitSelected = (encoladoType: 'Multiple 1' | 'Multiple 2') => {
         const selectedItems = encoladoType === 'Multiple 1' ? selectedItemsEncolado1 : selectedItemsEncolado2;
 
-        if (selectedItems.length === 0) {
-            alert('No items selected.');
-            return;
-        }
 
         const payload = selectedItems.map((item) => ({
             ID: item.ID,
@@ -380,9 +376,11 @@ export default function Mult() {
                     fontSize: '16px',
                 }}
             />
-            {selectedItemsEncolado1.length > 0 && (
-                <div style={{ marginBottom: '20px', padding: '15px', border: '1px solid #ddd', borderRadius: '5px', backgroundColor: '#f9f9f9' }}>
-                    <h3 style={{ marginBottom: '15px', color: '#333' }}>Elementos Seleccionados - Multiple 1</h3>
+            <div style={{ marginBottom: '20px', padding: '15px', border: '1px solid #ddd', borderRadius: '5px', backgroundColor: '#f9f9f9' }}>
+                <h3 style={{ marginBottom: '15px', color: '#333' }}>Elementos Seleccionados - Multiple 1</h3>
+                {selectedItemsEncolado1.length === 0 ? (
+                    <p style={{ color: '#666', fontStyle: 'italic' }}>No hay elementos seleccionados.</p>
+                ) : (
                     <ul style={{ listStyleType: 'none', padding: 0 }}>
                         {selectedItemsEncolado1.map((item, index) => (
                             <li key={item.ID} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px', backgroundColor: '#fff', padding: '10px', borderRadius: '5px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}>
@@ -449,27 +447,29 @@ export default function Mult() {
                             </li>
                         ))}
                     </ul>
-                    <button
-                        style={{
-                            marginTop: '15px',
-                            padding: '10px',
-                            backgroundColor: '#c8a165', // Updated color
-                            color: '#fff',
-                            border: 'none',
-                            borderRadius: '5px',
-                            cursor: 'pointer',
-                            width: '100%',
-                            fontSize: '16px',
-                        }}
-                        onClick={() => handleSubmitSelected('Multiple 1')}
-                    >
-                        Subir Seleccionados - Multiple 1
-                    </button>
-                </div>
-            )}
-            {selectedItemsEncolado2.length > 0 && (
-                <div style={{ marginBottom: '20px', padding: '15px', border: '1px solid #ddd', borderRadius: '5px', backgroundColor: '#f9f9f9' }}>
-                    <h3 style={{ marginBottom: '15px', color: '#333' }}>Elementos Seleccionados - Multiple 2</h3>
+                )}
+                <button
+                    style={{
+                        marginTop: '15px',
+                        padding: '10px',
+                        backgroundColor: '#c8a165', // Updated color
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '5px',
+                        cursor: 'pointer',
+                        width: '100%',
+                        fontSize: '16px',
+                    }}
+                    onClick={() => handleSubmitSelected('Multiple 1')}
+                >
+                    Subir Seleccionados - Multiple 1
+                </button>
+            </div>
+            <div style={{ marginBottom: '20px', padding: '15px', border: '1px solid #ddd', borderRadius: '5px', backgroundColor: '#f9f9f9' }}>
+                <h3 style={{ marginBottom: '15px', color: '#333' }}>Elementos Seleccionados - Multiple 2</h3>
+                {selectedItemsEncolado2.length === 0 ? (
+                    <p style={{ color: '#666', fontStyle: 'italic' }}>No hay elementos seleccionados.</p>
+                ) : (
                     <ul style={{ listStyleType: 'none', padding: 0 }}>
                         {selectedItemsEncolado2.map((item, index) => (
                             <li key={item.ID} style={{ display: 'flex', alignItems: 'center', marginBottom: '10px', backgroundColor: '#fff', padding: '10px', borderRadius: '5px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}>
@@ -536,24 +536,24 @@ export default function Mult() {
                             </li>
                         ))}
                     </ul>
-                    <button
-                        style={{
-                            marginTop: '15px',
-                            padding: '10px',
-                            backgroundColor: '#c8a165', // Updated color
-                            color: '#fff',
-                            border: 'none',
-                            borderRadius: '5px',
-                            cursor: 'pointer',
-                            width: '100%',
-                            fontSize: '16px',
-                        }}
-                        onClick={() => handleSubmitSelected('Multiple 2')}
-                    >
-                        Subir Seleccionados - Multiple 2
-                    </button>
-                </div>
-            )}
+                )}
+                <button
+                    style={{
+                        marginTop: '15px',
+                        padding: '10px',
+                        backgroundColor: '#c8a165', // Updated color
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '5px',
+                        cursor: 'pointer',
+                        width: '100%',
+                        fontSize: '16px',
+                    }}
+                    onClick={() => handleSubmitSelected('Multiple 2')}
+                >
+                    Subir Seleccionados - Multiple 2
+                </button>
+            </div>
             {loading ? (
                 <p>Loading...</p>
             ) : error ? (
