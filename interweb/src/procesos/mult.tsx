@@ -21,6 +21,7 @@ interface DataItem {
         DesProd: string; // Corrected property name
         CantMat: number;
     }[]; // Update Placas field
+    isSubido?: boolean;
 }
 
 export default function Mult() {
@@ -42,22 +43,13 @@ export default function Mult() {
     const [selectedEncolado, setSelectedEncolado] = useState<'Multiple 1' | 'Multiple 2'>('Multiple 1'); // Dropdown state
     const [selectedItemsEncolado1, setSelectedItemsEncolado1] = useState<DataItem[]>([]); // Separate table for Encolado 1
     const [selectedItemsEncolado2, setSelectedItemsEncolado2] = useState<DataItem[]>([]); // Separate table for Encolado 2
+    const [isMultiple1Subido, setIsMultiple1Subido] = useState<boolean>(true);
+    const [isMultiple2Subido, setIsMultiple2Subido] = useState<boolean>(true);
     const [encoladoData, setEncoladoData] = useState<DataItem[]>([]); // Data from /app/encolado
     const [encolado2Data, setEncolado2Data] = useState<DataItem[]>([]); // Data from /app/encolado2
     const [showEncoladoTable, setShowEncoladoTable] = useState<'none' | 'multiple' | 'multiple2'>('none');
 
-    // Auto-remove items with zero requested quantity from selected lists
-    useEffect(() => {
-        setSelectedItemsEncolado1((prev) => {
-            const filtered = prev.filter((it) => Number(it.CANT_A_FABRICAR) > 0);
-            return filtered.length === prev.length ? prev : filtered;
-        });
-        setSelectedItemsEncolado2((prev) => {
-            const filtered = prev.filter((it) => Number(it.CANT_A_FABRICAR) > 0);
-            return filtered.length === prev.length ? prev : filtered;
-        });
-    }, [selectedItemsEncolado1, selectedItemsEncolado2]);
-
+    // fetch pending data for Multiple
     const fetchData = () => {
         const apiUrl = `${API_BASE_URL}/procesos/pendientes-multiple`;
         setLoading(true);
@@ -66,10 +58,10 @@ export default function Mult() {
                 if (Array.isArray(response.data)) {
                     const transformedData = response.data.map((item) => ({
                         ...item,
-                        Placas: typeof item.Placas === 'string' ? JSON.parse(item.Placas) : item.Placas, // Parse only if it's a string
+                        Placas: typeof item.Placas === 'string' ? JSON.parse(item.Placas) : item.Placas,
                     }));
                     setData(transformedData);
-                    setOriginalData(transformedData); // Save original data
+                    setOriginalData(transformedData);
                 } else {
                     setError('Unexpected API response format.');
                 }
@@ -86,19 +78,21 @@ export default function Mult() {
         setDesiredQuantity(''); // Reset desired quantity
         setPlacasFields(item.Placas.map((placa) => placa.DesProd)); // Pre-fill all "Tipo Placa" fields with DesProd
         setPlacasUsadasFields(item.Placas.map(() => '')); // Reset all "Cantidad a usar" fields
-        setSinConsumoPlacas(false); // Asegura que el checkbox esté desmarcado al abrir el modal
+        setSinConsumoPlacas(false); // Ensure checkbox is unchecked
         setShowModal(true);
     };
 
+    // Auto-remove items with zero requested quantity from selected lists
     useEffect(() => {
-        if (selectedItem && desiredQuantity !== '' && !sinConsumoPlacas) {
-            const updatedPlacasUsadas = selectedItem.Placas.map((placa, index) => {
-                const currentValue = placasUsadasFields[index];
-                return currentValue !== '' ? Math.ceil(Number(currentValue)).toString() : Math.ceil(parseFloat(desiredQuantity) * placa.CantMat).toString();
-            }); // Actualizar dinámicamente con el valor actual y redondear hacia arriba
-            setPlacasUsadasFields(updatedPlacasUsadas);
-        }
-    }, [desiredQuantity, selectedItem, sinConsumoPlacas]); // Add sinConsumoPlacas to dependencies
+        setSelectedItemsEncolado1((prev) => {
+            const filtered = prev.filter((it) => Number(it.CANT_A_FABRICAR) > 0);
+            return filtered.length === prev.length ? prev : filtered;
+        });
+        setSelectedItemsEncolado2((prev) => {
+            const filtered = prev.filter((it) => Number(it.CANT_A_FABRICAR) > 0);
+            return filtered.length === prev.length ? prev : filtered;
+        });
+    }, [selectedItemsEncolado1, selectedItemsEncolado2]);
 
     const handleDesiredQuantityChange = (value: string) => {
         setDesiredQuantity(value); // Actualizar el estado de desiredQuantity
@@ -148,8 +142,10 @@ export default function Mult() {
 
             if (selectedEncolado === 'Multiple 1') {
                 setSelectedItemsEncolado1((prev) => [...prev, updatedItem]);
+                setIsMultiple1Subido(false);
             } else {
                 setSelectedItemsEncolado2((prev) => [...prev, updatedItem]);
+                setIsMultiple2Subido(false);
             }
 
             setShowModal(false);
@@ -173,6 +169,7 @@ export default function Mult() {
                 });
                 return prev.filter((_, i) => i !== index);
             });
+            setIsMultiple1Subido(false);
         } else {
             setSelectedItemsEncolado2((prev) => {
                 const removedItem = prev[index];
@@ -188,6 +185,7 @@ export default function Mult() {
                 });
                 return prev.filter((_, i) => i !== index);
             });
+            setIsMultiple2Subido(false);
         }
     };
 
@@ -214,7 +212,11 @@ export default function Mult() {
                 } else {
                     setSelectedItemsEncolado2([]);
                 }
+                // Refresh both pending items and the multiple "app" data
                 fetchData();
+                fetchMultiple();
+                if (encoladoType === 'Multiple 1') setIsMultiple1Subido(true);
+                else setIsMultiple2Subido(true);
             })
             .catch((error) => {
                 console.error(`Error submitting selected items for ${encoladoType}:`, error);
@@ -230,12 +232,14 @@ export default function Mult() {
                 [updated[index - 1], updated[index]] = [updated[index], updated[index - 1]];
                 return updated;
             });
+            setIsMultiple1Subido(false);
         } else {
             setSelectedItemsEncolado2((prev) => {
                 const updated = [...prev];
                 [updated[index - 1], updated[index]] = [updated[index], updated[index - 1]];
                 return updated;
             });
+            setIsMultiple2Subido(false);
         }
     };
 
@@ -247,6 +251,7 @@ export default function Mult() {
                 [updated[index], updated[index + 1]] = [updated[index + 1], updated[index]];
                 return updated;
             });
+            setIsMultiple1Subido(false);
         } else {
             setSelectedItemsEncolado2((prev) => {
                 if (index === prev.length - 1) return prev;
@@ -254,6 +259,7 @@ export default function Mult() {
                 [updated[index], updated[index + 1]] = [updated[index + 1], updated[index]];
                 return updated;
             });
+            setIsMultiple2Subido(false);
         }
     };
 
@@ -289,6 +295,43 @@ export default function Mult() {
 
     useEffect(() => {
         fetchData();
+    }, []);
+
+    // fetch multiple "app" data (used to populate the selection table)
+    const fetchMultiple = async () => {
+        setLoading(true);
+        try {
+            const [res1, res2] = await Promise.all([
+                axios.get(`${API_BASE_URL}/app/multiple`),
+                axios.get(`${API_BASE_URL}/app/multiple2`)
+            ]);
+            const parsePlacas = (arr: any[]) => arr.map((item) => {
+                let transformedPlacas: string[] = [];
+                let placasUsadas: number[] = [];
+                try {
+                    transformedPlacas = item.PLACAS_A_USAR ? JSON.parse(item.PLACAS_A_USAR) : [];
+                } catch { transformedPlacas = []; }
+                try {
+                    placasUsadas = item.CANTIDAD_PLACAS ? JSON.parse(item.CANTIDAD_PLACAS) : [];
+                } catch { placasUsadas = []; }
+                return {
+                    ...item,
+                    CANT_A_FABRICAR: item.CANT_A_FABRICAR ?? 0,
+                    transformedPlacas,
+                    placasUsadas,
+                };
+            });
+            setSelectedItemsEncolado1(parsePlacas(res1.data).map((it) => ({ ...it, isSubido: true })));
+            setSelectedItemsEncolado2(parsePlacas(res2.data).map((it) => ({ ...it, isSubido: true })));
+        } catch (err) {
+            setError('Error al obtener datos de multiple/multiple2');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchMultiple();
     }, []);
 
     // Render encolado/encolado2 GET results directamente en la tabla de selección

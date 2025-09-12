@@ -165,7 +165,9 @@ export default function Troz() {
             .then(() => {
                 alert('Elementos seleccionados para Trozado subidos correctamente!');
                 setSelectedItems([]);
+                // Refresh both pending items and the trozado "app" data
                 fetchData();
+                fetchTrozado();
             })
             .catch((error) => {
                 console.error('Error al subir elementos para Trozado:', error);
@@ -225,34 +227,36 @@ export default function Troz() {
         fetchData();
     }, []);
 
+    // fetch trozado "app" data (used to populate the selection table)
+    const fetchTrozado = async () => {
+        setLoading(true);
+        try {
+            const res = await axios.get(`${API_BASE_URL}/app/trozado`);
+            const parsePlacas = (arr: any[]) => arr.map((item) => {
+                let transformedPlacas: string[] = [];
+                let placasUsadas: number[] = [];
+                try {
+                    transformedPlacas = item.PLACAS_A_USAR ? JSON.parse(item.PLACAS_A_USAR) : [];
+                } catch { transformedPlacas = []; }
+                try {
+                    placasUsadas = item.CANTIDAD_PLACAS ? JSON.parse(item.CANTIDAD_PLACAS) : [];
+                } catch { placasUsadas = []; }
+                return {
+                    ...item,
+                    CANT_A_FABRICAR: item.CANT_A_FABRICAR ?? 0,
+                    transformedPlacas,
+                    placasUsadas,
+                };
+            });
+            setSelectedItems(parsePlacas(res.data));
+        } catch (err) {
+            setError('Error al obtener datos de trozado');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const fetchTrozado = async () => {
-            setLoading(true);
-            try {
-                const res = await axios.get(`${API_BASE_URL}/app/trozado`);
-                const parsePlacas = (arr: any[]) => arr.map((item) => {
-                    let transformedPlacas: string[] = [];
-                    let placasUsadas: number[] = [];
-                    try {
-                        transformedPlacas = item.PLACAS_A_USAR ? JSON.parse(item.PLACAS_A_USAR) : [];
-                    } catch { transformedPlacas = []; }
-                    try {
-                        placasUsadas = item.CANTIDAD_PLACAS ? JSON.parse(item.CANTIDAD_PLACAS) : [];
-                    } catch { placasUsadas = []; }
-                    return {
-                        ...item,
-                        CANT_A_FABRICAR: item.CANT_A_FABRICAR ?? 0,
-                        transformedPlacas,
-                        placasUsadas,
-                    };
-                });
-                setSelectedItems(parsePlacas(res.data));
-            } catch (err) {
-                setError('Error al obtener datos de trozado');
-            } finally {
-                setLoading(false);
-            }
-        };
         fetchTrozado();
     }, []);
 

@@ -21,6 +21,7 @@ interface DataItem {
         DesProd: string; // Corrected property name
         CantMat: number;
     }[]; // Update Placas field
+    isSubido?: boolean;
 }
 
 export default function Troquel() {
@@ -42,6 +43,8 @@ export default function Troquel() {
     const [selectedEncolado, setSelectedEncolado] = useState<'Troqueladora Grande' | 'Troqueladora Chica'>('Troqueladora Grande'); // Dropdown state
     const [selectedItemsEncolado1, setSelectedItemsEncolado1] = useState<DataItem[]>([]); // Separate table for Encolado 1
     const [selectedItemsEncolado2, setSelectedItemsEncolado2] = useState<DataItem[]>([]); // Separate table for Encolado 2
+    const [isTroquel1Subido, setIsTroquel1Subido] = useState<boolean>(true);
+    const [isTroquel2Subido, setIsTroquel2Subido] = useState<boolean>(true);
     const [encoladoData, setEncoladoData] = useState<DataItem[]>([]); // Data from /app/encolado
     const [encolado2Data, setEncolado2Data] = useState<DataItem[]>([]); // Data from /app/encolado2
     const [showEncoladoTable, setShowEncoladoTable] = useState<'none' | 'troquelado' | 'troquelado'>('none');
@@ -200,7 +203,9 @@ export default function Troquel() {
                 } else {
                     setSelectedItemsEncolado2([]);
                 }
+                // Refresh both pending items and the troquelado "app" data
                 fetchData();
+                fetchTroquelado();
             })
             .catch((error) => {
                 console.error(`Error submitting selected items for ${encoladoType}:`, error);
@@ -275,6 +280,43 @@ export default function Troquel() {
 
     useEffect(() => {
         fetchData();
+    }, []);
+
+    // fetch troquelado "app" data (used to populate the selection table)
+    const fetchTroquelado = async () => {
+        setLoading(true);
+        try {
+            const [res1, res2] = await Promise.all([
+                axios.get(`${API_BASE_URL}/app/troquelado`),
+                axios.get(`${API_BASE_URL}/app/troquelado2`)
+            ]);
+            const parsePlacas = (arr: any[]) => arr.map((item) => {
+                let transformedPlacas: string[] = [];
+                let placasUsadas: number[] = [];
+                try {
+                    transformedPlacas = item.PLACAS_A_USAR ? JSON.parse(item.PLACAS_A_USAR) : [];
+                } catch { transformedPlacas = []; }
+                try {
+                    placasUsadas = item.CANTIDAD_PLACAS ? JSON.parse(item.CANTIDAD_PLACAS) : [];
+                } catch { placasUsadas = []; }
+                return {
+                    ...item,
+                    CANT_A_FABRICAR: item.CANT_A_FABRICAR ?? 0,
+                    transformedPlacas,
+                    placasUsadas,
+                };
+            });
+            setSelectedItemsEncolado1(parsePlacas(res1.data).map((it) => ({ ...it, isSubido: true })));
+            setSelectedItemsEncolado2(parsePlacas(res2.data).map((it) => ({ ...it, isSubido: true })));
+        } catch (err) {
+            setError('Error al obtener datos de troquelado');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchTroquelado();
     }, []);
 
     // Auto-remove any selected items with zero CANT_A_FABRICAR from both troquel selected lists

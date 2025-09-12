@@ -21,6 +21,7 @@ interface DataItem {
         DesProd: string; // Corrected property name
         CantMat: number;
     }[]; // Update Placas field
+    isSubido?: boolean;
 }
 
 export default function Encol() {
@@ -42,6 +43,8 @@ export default function Encol() {
     const [selectedEncolado, setSelectedEncolado] = useState<'Encolado 1' | 'Encolado 2'>('Encolado 1'); // Dropdown state
     const [selectedItemsEncolado1, setSelectedItemsEncolado1] = useState<DataItem[]>([]); // Separate table for Encolado 1
     const [selectedItemsEncolado2, setSelectedItemsEncolado2] = useState<DataItem[]>([]); // Separate table for Encolado 2
+    const [isEncolado1Subido, setIsEncolado1Subido] = useState<boolean>(true);
+    const [isEncolado2Subido, setIsEncolado2Subido] = useState<boolean>(true);
     const [encoladoData, setEncoladoData] = useState<DataItem[]>([]); // Data from /app/encolado
     const [encolado2Data, setEncolado2Data] = useState<DataItem[]>([]); // Data from /app/encolado2
     const [showEncoladoTable, setShowEncoladoTable] = useState<'none' | 'encolado' | 'encolado2'>('none');
@@ -149,8 +152,10 @@ export default function Encol() {
 
             if (selectedEncolado === 'Encolado 1') {
                 setSelectedItemsEncolado1((prev) => [...prev, updatedItem]);
+                setIsEncolado1Subido(false);
             } else {
                 setSelectedItemsEncolado2((prev) => [...prev, updatedItem]);
+                setIsEncolado2Subido(false);
             }
 
             setShowModal(false);
@@ -174,6 +179,7 @@ export default function Encol() {
                 });
                 return prev.filter((_, i) => i !== index);
             });
+            setIsEncolado1Subido(false);
         } else {
             setSelectedItemsEncolado2((prev) => {
                 const removedItem = prev[index];
@@ -189,6 +195,7 @@ export default function Encol() {
                 });
                 return prev.filter((_, i) => i !== index);
             });
+            setIsEncolado2Subido(false);
         }
     };
 
@@ -215,7 +222,11 @@ export default function Encol() {
                 } else {
                     setSelectedItemsEncolado2([]);
                 }
+                // Refresh both pending items and the encolado "app" data
                 fetchData();
+                fetchEncolado();
+                if (encoladoType === 'Encolado 1') setIsEncolado1Subido(true);
+                else setIsEncolado2Subido(true);
             })
             .catch((error) => {
                 console.error(`Error submitting selected items for ${encoladoType}:`, error);
@@ -231,12 +242,14 @@ export default function Encol() {
                 [updated[index - 1], updated[index]] = [updated[index], updated[index - 1]];
                 return updated;
             });
+            setIsEncolado1Subido(false);
         } else {
             setSelectedItemsEncolado2((prev) => {
                 const updated = [...prev];
                 [updated[index - 1], updated[index]] = [updated[index], updated[index - 1]];
                 return updated;
             });
+            setIsEncolado2Subido(false);
         }
     };
 
@@ -248,6 +261,7 @@ export default function Encol() {
                 [updated[index], updated[index + 1]] = [updated[index + 1], updated[index]];
                 return updated;
             });
+            setIsEncolado1Subido(false);
         } else {
             setSelectedItemsEncolado2((prev) => {
                 if (index === prev.length - 1) return prev;
@@ -255,6 +269,7 @@ export default function Encol() {
                 [updated[index], updated[index + 1]] = [updated[index + 1], updated[index]];
                 return updated;
             });
+            setIsEncolado2Subido(false);
         }
     };
 
@@ -290,6 +305,43 @@ export default function Encol() {
 
     useEffect(() => {
         fetchData();
+    }, []);
+
+    // fetch encolado "app" data (used to populate the selection table)
+    const fetchEncolado = async () => {
+        setLoading(true);
+        try {
+            const [res1, res2] = await Promise.all([
+                axios.get(`${API_BASE_URL}/app/encolado`),
+                axios.get(`${API_BASE_URL}/app/encolado2`)
+            ]);
+            const parsePlacas = (arr: any[]) => arr.map((item) => {
+                let transformedPlacas: string[] = [];
+                let placasUsadas: number[] = [];
+                try {
+                    transformedPlacas = item.PLACAS_A_USAR ? JSON.parse(item.PLACAS_A_USAR) : [];
+                } catch { transformedPlacas = []; }
+                try {
+                    placasUsadas = item.CANTIDAD_PLACAS ? JSON.parse(item.CANTIDAD_PLACAS) : [];
+                } catch { placasUsadas = []; }
+                return {
+                    ...item,
+                    CANT_A_FABRICAR: item.CANT_A_FABRICAR ?? 0,
+                    transformedPlacas,
+                    placasUsadas,
+                };
+            });
+            setSelectedItemsEncolado1(parsePlacas(res1.data).map((it) => ({ ...it, isSubido: true })));
+            setSelectedItemsEncolado2(parsePlacas(res2.data).map((it) => ({ ...it, isSubido: true })));
+        } catch (err) {
+            setError('Error al obtener datos de encolado/encolado2');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchEncolado();
     }, []);
 
     // Render encolado/encolado2 GET results directamente en la tabla de selección

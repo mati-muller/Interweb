@@ -166,6 +166,7 @@ export default function Calado() {
                 alert('Elementos seleccionados para Calado subidos correctamente!');
                 setSelectedItems([]);
                 fetchData();
+                fetchCalado();
             })
             .catch((error) => {
                 console.error('Error al subir elementos para Calado:', error);
@@ -225,35 +226,36 @@ export default function Calado() {
         fetchData();
     }, []);
 
+    const fetchCalado = async () => {
+        setLoading(true);
+        try {
+            const res = await axios.get(`${API_BASE_URL}/app/calado`);
+            // Parse campos si es necesario
+            const parsePlacas = (arr: any[]) => arr.map((item) => {
+                let transformedPlacas: string[] = [];
+                let placasUsadas: number[] = [];
+                try {
+                    transformedPlacas = item.PLACAS_A_USAR ? JSON.parse(item.PLACAS_A_USAR) : [];
+                } catch { transformedPlacas = []; }
+                try {
+                    placasUsadas = item.CANTIDAD_PLACAS ? JSON.parse(item.CANTIDAD_PLACAS) : [];
+                } catch { placasUsadas = []; }
+                return {
+                    ...item,
+                    CANT_A_FABRICAR: item.CANT_A_FABRICAR ?? 0,
+                    transformedPlacas,
+                    placasUsadas,
+                };
+            });
+            setSelectedItems(parsePlacas(res.data));
+        } catch (err) {
+            setError('Error al obtener datos de calado');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const fetchCalado = async () => {
-            setLoading(true);
-            try {
-                const res = await axios.get(`${API_BASE_URL}/app/calado`);
-                // Parse campos si es necesario
-                const parsePlacas = (arr: any[]) => arr.map((item) => {
-                    let transformedPlacas: string[] = [];
-                    let placasUsadas: number[] = [];
-                    try {
-                        transformedPlacas = item.PLACAS_A_USAR ? JSON.parse(item.PLACAS_A_USAR) : [];
-                    } catch { transformedPlacas = []; }
-                    try {
-                        placasUsadas = item.CANTIDAD_PLACAS ? JSON.parse(item.CANTIDAD_PLACAS) : [];
-                    } catch { placasUsadas = []; }
-                    return {
-                        ...item,
-                        CANT_A_FABRICAR: item.CANT_A_FABRICAR ?? 0,
-                        transformedPlacas,
-                        placasUsadas,
-                    };
-                });
-                setSelectedItems(parsePlacas(res.data));
-            } catch (err) {
-                setError('Error al obtener datos de calado');
-            } finally {
-                setLoading(false);
-            }
-        };
         fetchCalado();
     }, []);
 

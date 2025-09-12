@@ -166,6 +166,7 @@ export default function Emplacado() {
                 alert('Elementos seleccionados para Emplacado subidos correctamente!');
                 setSelectedItems([]);
                 fetchData();
+                fetchEmplacado();
             })
             .catch((error) => {
                 console.error('Error al subir elementos para Emplacado:', error);
@@ -225,35 +226,36 @@ export default function Emplacado() {
         fetchData();
     }, []);
 
+    const fetchEmplacado = async () => {
+        setLoading(true);
+        try {
+            const res = await axios.get(`${API_BASE_URL}/app/emplacado`);
+            // Parse campos si es necesario
+            const parsePlacas = (arr: any[]) => arr.map((item) => {
+                let transformedPlacas: string[] = [];
+                let placasUsadas: number[] = [];
+                try {
+                    transformedPlacas = item.PLACAS_A_USAR ? JSON.parse(item.PLACAS_A_USAR) : [];
+                } catch { transformedPlacas = []; }
+                try {
+                    placasUsadas = item.CANTIDAD_PLACAS ? JSON.parse(item.CANTIDAD_PLACAS) : [];
+                } catch { placasUsadas = []; }
+                return {
+                    ...item,
+                    CANT_A_FABRICAR: item.CANT_A_FABRICAR ?? 0,
+                    transformedPlacas,
+                    placasUsadas,
+                };
+            });
+            setSelectedItems(parsePlacas(res.data));
+        } catch (err) {
+            setError('Error al obtener datos de emplacado');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const fetchEmplacado = async () => {
-            setLoading(true);
-            try {
-                const res = await axios.get(`${API_BASE_URL}/app/emplacado`);
-                // Parse campos si es necesario
-                const parsePlacas = (arr: any[]) => arr.map((item) => {
-                    let transformedPlacas: string[] = [];
-                    let placasUsadas: number[] = [];
-                    try {
-                        transformedPlacas = item.PLACAS_A_USAR ? JSON.parse(item.PLACAS_A_USAR) : [];
-                    } catch { transformedPlacas = []; }
-                    try {
-                        placasUsadas = item.CANTIDAD_PLACAS ? JSON.parse(item.CANTIDAD_PLACAS) : [];
-                    } catch { placasUsadas = []; }
-                    return {
-                        ...item,
-                        CANT_A_FABRICAR: item.CANT_A_FABRICAR ?? 0,
-                        transformedPlacas,
-                        placasUsadas,
-                    };
-                });
-                setSelectedItems(parsePlacas(res.data));
-            } catch (err) {
-                setError('Error al obtener datos de emplacado');
-            } finally {
-                setLoading(false);
-            }
-        };
         fetchEmplacado();
     }, []);
 
