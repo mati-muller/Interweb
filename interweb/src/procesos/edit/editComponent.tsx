@@ -37,6 +37,9 @@ const ReusableProcessComponent: React.FC<ReusableProcessComponentProps> = ({ pro
     const [placasFields, setPlacasFields] = useState<string[]>(['']); // Dynamic fields for Placas
     const [placasUsadasFields, setPlacasUsadasFields] = useState<string[]>(['']); // Dynamic fields for Placas Usadas
     const [placasCantMat, setPlacasCantMat] = useState<number[]>([]); // Nuevo: guarda CantMat de cada placa
+    const [placasOptions, setPlacasOptions] = useState<string[]>([]); // Options fetched from API
+    const [placasLoading, setPlacasLoading] = useState<boolean>(false);
+    const [placasError, setPlacasError] = useState<string | null>(null);
 
     const fetchData = () => {
         const apiUrl = `${API_BASE_URL}/app/${proceso}`;
@@ -54,6 +57,22 @@ const ReusableProcessComponent: React.FC<ReusableProcessComponentProps> = ({ pro
 
     useEffect(() => {
         fetchData();
+        
+        // Fetch placas options from API
+        const fetchPlacas = async () => {
+            setPlacasLoading(true);
+            try {
+                const res = await axios.get<{ placa: string }[]>(`${API_BASE_URL}/inventario/placas`);
+                const opciones = res.data.map((p) => p.placa);
+                setPlacasOptions(opciones);
+            } catch (err) {
+                console.error('Error fetching placas options', err);
+                setPlacasError('No se pudo cargar las placas');
+            } finally {
+                setPlacasLoading(false);
+            }
+        };
+        fetchPlacas();
     }, []);
 
     const openModal = (row: DataItem) => {
@@ -325,9 +344,8 @@ const ReusableProcessComponent: React.FC<ReusableProcessComponentProps> = ({ pro
                         </label>
                         {placasFields.map((placa, index) => (
                             <div key={`placa-group-${index}`} style={{ marginBottom: '15px' }}>
-                                <input
-                                    type="text"
-                                    placeholder={`Tipo Placa ${index + 1}`}
+                                {/* Replace free-text placa input with a select populated from /inventario/placas but keep prerellenado */}
+                                <select
                                     value={placa}
                                     onChange={(e) => handleUpdatePlaca(index, e.target.value)}
                                     style={{
@@ -337,8 +355,24 @@ const ReusableProcessComponent: React.FC<ReusableProcessComponentProps> = ({ pro
                                         border: '1px solid #ccc',
                                         borderRadius: '5px',
                                         fontSize: '16px',
+                                        backgroundColor: '#fff',
                                     }}
-                                />
+                                >
+                                    {/* If loading show a single option */}
+                                    {placasLoading && <option>Loading...</option>}
+                                    {!placasLoading && placasError && <option>{placasError}</option>}
+                                    {!placasLoading && !placasError && (
+                                        <>
+                                            {/* If there's a prerellenado value that is not in opciones, keep it as first option */}
+                                            {placa && !placasOptions.includes(placa) && (
+                                                <option value={placa}>{placa}</option>
+                                            )}
+                                            {placasOptions.map((opt) => (
+                                                <option key={opt} value={opt}>{opt}</option>
+                                            ))}
+                                        </>
+                                    )}
+                                </select>
                                 <input
                                     type="number"
                                     placeholder={`Placas Usadas ${index + 1}`}

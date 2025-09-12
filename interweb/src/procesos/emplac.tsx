@@ -36,9 +36,45 @@ export default function Emplacado() {
     const [searchQuery, setSearchQuery] = useState(''); // State for search query
     const [placasFields, setPlacasFields] = useState<string[]>(['']); // Dynamic fields for Placas
     const [placasUsadasFields, setPlacasUsadasFields] = useState<string[]>(['']); // Dynamic fields for Placas Usadas
+    const [placasOptions, setPlacasOptions] = useState<string[]>([]); // Options fetched from API
+    const [placasLoading, setPlacasLoading] = useState<boolean>(false);
+    const [placasError, setPlacasError] = useState<string | null>(null);
     const [alertModalVisible, setAlertModalVisible] = useState(false); // State for alert modal visibility
     const [alertMessage, setAlertMessage] = useState(''); // State for alert message
     const [sinConsumoPlacas, setSinConsumoPlacas] = useState(false); // State for "sin consumo de placas", por defecto desmarcado
+
+    // Helper functions for updating placa fields
+    const updatePlacaField = (index: number, value: string) => {
+        setPlacasFields((prev) => {
+            const updated = [...prev];
+            updated[index] = value;
+            return updated;
+        });
+    };
+
+    const updatePlacaUsadaField = (index: number, value: string) => {
+        setPlacasUsadasFields((prev) => {
+            const updated = [...prev];
+            updated[index] = value;
+            return updated;
+        });
+    };
+
+    const addPlacaField = () => {
+        setPlacasFields((prev) => [...prev, '']);
+        setPlacasUsadasFields((prev) => [...prev, '']);
+    };
+
+    const handleSinConsumoPlacasChange = (checked: boolean) => {
+        setSinConsumoPlacas(checked);
+        if (checked) {
+            setPlacasFields(['']);
+            setPlacasUsadasFields(['']);
+        } else if (selectedItem) {
+            setPlacasFields(selectedItem.Placas.map((placa) => placa.DesProd));
+            setPlacasUsadasFields(selectedItem.Placas.map(() => ''));
+        }
+    };
 
     const fetchData = () => {
         const apiUrl = `${API_BASE_URL}/procesos/pendientes-emplacado`;
@@ -71,6 +107,24 @@ export default function Emplacado() {
         setSinConsumoPlacas(false); // Asegura que el checkbox esté desmarcado al abrir el modal
         setShowModal(true);
     };
+
+    // Fetch placas options from API
+    useEffect(() => {
+        const fetchPlacas = async () => {
+            setPlacasLoading(true);
+            try {
+                const res = await axios.get<{ placa: string }[]>(`${API_BASE_URL}/inventario/placas`);
+                const opciones = res.data.map((p) => p.placa);
+                setPlacasOptions(opciones);
+            } catch (err) {
+                console.error('Error fetching placas options', err);
+                setPlacasError('No se pudo cargar las placas');
+            } finally {
+                setPlacasLoading(false);
+            }
+        };
+        fetchPlacas();
+    }, []);
 
     useEffect(() => {
         if (selectedItem && desiredQuantity !== '' && !sinConsumoPlacas) {
@@ -190,36 +244,6 @@ export default function Emplacado() {
             [updated[index], updated[index + 1]] = [updated[index + 1], updated[index]];
             return updated;
         });
-    };
-
-    const addPlacaField = () => {
-        setPlacasFields([...placasFields, '']);
-        setPlacasUsadasFields([...placasUsadasFields, '']);
-    };
-
-    const updatePlacaField = (index: number, value: string) => {
-        const updatedPlacas = [...placasFields];
-        updatedPlacas[index] = value;
-        setPlacasFields(updatedPlacas);
-    };
-
-    const updatePlacaUsadaField = (index: number, value: string) => {
-        setPlacasUsadasFields((prev) => {
-            const updated = [...prev];
-            updated[index] = value; // Actualizar el valor dinámicamente
-            return updated;
-        });
-    };
-
-    const handleSinConsumoPlacasChange = (checked: boolean) => {
-        setSinConsumoPlacas(checked);
-        if (checked) {
-            setPlacasFields(['']); // Clear placas fields
-            setPlacasUsadasFields(['']); // Clear placas quantities
-        } else if (selectedItem) {
-            setPlacasFields(selectedItem.Placas.map((placa) => placa.DesProd)); // Refill placas fields
-            setPlacasUsadasFields(selectedItem.Placas.map(() => '')); // Reset quantities
-        }
     };
 
     useEffect(() => {
@@ -457,11 +481,11 @@ export default function Emplacado() {
                         />
                         {placasFields.map((placa, index) => (
                             <div key={`placa-group-${index}`} style={{ marginBottom: '15px' }}>
-                                <input
-                                    type="text"
-                                    placeholder={`Tipo Placa ${index + 1}`}
+                                {/* Replace free-text placa input with a select populated from /inventario/placas but keep prerellenado */}
+                                <select
                                     value={placa}
                                     onChange={(e) => updatePlacaField(index, e.target.value)}
+                                    disabled={sinConsumoPlacas}
                                     style={{
                                         width: '90%',
                                         padding: '12px',
@@ -469,8 +493,24 @@ export default function Emplacado() {
                                         border: '1px solid #ccc',
                                         borderRadius: '5px',
                                         fontSize: '16px',
+                                        backgroundColor: sinConsumoPlacas ? '#f5f5f5' : '#fff',
                                     }}
-                                />
+                                >
+                                    {/* If loading show a single option */}
+                                    {placasLoading && <option>Loading...</option>}
+                                    {!placasLoading && placasError && <option>{placasError}</option>}
+                                    {!placasLoading && !placasError && (
+                                        <>
+                                            {/* If there's a prerellenado value that is not in opciones, keep it as first option */}
+                                            {placa && !placasOptions.includes(placa) && (
+                                                <option value={placa}>{placa}</option>
+                                            )}
+                                            {placasOptions.map((opt) => (
+                                                <option key={opt} value={opt}>{opt}</option>
+                                            ))}
+                                        </>
+                                    )}
+                                </select>
                                 <input
                                     type="number"
                                     placeholder={`Cantidad a usar ${index + 1}`}
