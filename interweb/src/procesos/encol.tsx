@@ -37,6 +37,9 @@ export default function Encol() {
     const [searchQuery, setSearchQuery] = useState(''); // State for search query
     const [placasFields, setPlacasFields] = useState<string[]>(['']); // Dynamic fields for Placas
     const [placasUsadasFields, setPlacasUsadasFields] = useState<string[]>(['']); // Dynamic fields for Placas Usadas
+    const [placasOptions, setPlacasOptions] = useState<string[]>([]); // Options fetched from API
+    const [placasLoading, setPlacasLoading] = useState<boolean>(false);
+    const [placasError, setPlacasError] = useState<string | null>(null);
     const [alertModalVisible, setAlertModalVisible] = useState(false); // State for alert modal visibility
     const [alertMessage, setAlertMessage] = useState(''); // State for alert message
     const [sinConsumoPlacas, setSinConsumoPlacas] = useState(false); // State for "sin consumo de placas", por defecto desmarcado
@@ -48,6 +51,18 @@ export default function Encol() {
     const [encoladoData, setEncoladoData] = useState<DataItem[]>([]); // Data from /app/encolado
     const [encolado2Data, setEncolado2Data] = useState<DataItem[]>([]); // Data from /app/encolado2
     const [showEncoladoTable, setShowEncoladoTable] = useState<'none' | 'encolado' | 'encolado2'>('none');
+
+    // Reusable uniform style for inputs and selects to keep same width/height
+    const uniformInputStyle: React.CSSProperties = {
+        width: '90%',
+        padding: '12px',
+        border: '1px solid #ccc',
+        borderRadius: '5px',
+        fontSize: '16px',
+        boxSizing: 'border-box' as const,
+        marginBottom: '10px',
+        backgroundColor: '#fff',
+    };
 
     // Auto-remove items with zero requested quantity from selected lists
     useEffect(() => {
@@ -93,6 +108,24 @@ export default function Encol() {
         setSinConsumoPlacas(false); // Asegura que el checkbox esté desmarcado al abrir el modal
         setShowModal(true);
     };
+
+    // Fetch placas options from API
+    useEffect(() => {
+        const fetchPlacas = async () => {
+            setPlacasLoading(true);
+            try {
+                const res = await axios.get<{ placa: string }[]>(`${API_BASE_URL}/inventario/placas`);
+                const opciones = res.data.map((p) => p.placa);
+                setPlacasOptions(opciones);
+            } catch (err) {
+                console.error('Error fetching placas options', err);
+                setPlacasError('No se pudo cargar las placas');
+            } finally {
+                setPlacasLoading(false);
+            }
+        };
+        fetchPlacas();
+    }, []);
 
     useEffect(() => {
         if (selectedItem && desiredQuantity !== '' && !sinConsumoPlacas) {
@@ -422,11 +455,9 @@ export default function Encol() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 style={{
                     marginBottom: '20px',
-                    padding: '10px',
                     width: '100%',
-                    border: '1px solid #ccc',
-                    borderRadius: '5px',
-                    fontSize: '16px',
+                    ...uniformInputStyle,
+                    padding: '10px',
                 }}
             />
             <div style={{ marginBottom: '20px', padding: '15px', border: '1px solid #ddd', borderRadius: '5px', backgroundColor: '#f9f9f9' }}>
@@ -695,41 +726,45 @@ export default function Encol() {
                             value={desiredQuantity}
                             onChange={(e) => handleDesiredQuantityChange(e.target.value)} // Usar la nueva función
                             style={{
-                                width: '90%',
-                                padding: '12px',
+                                ...uniformInputStyle,
                                 marginBottom: '15px',
-                                border: '1px solid #ccc',
-                                borderRadius: '5px',
-                                fontSize: '16px',
                             }}
                         />
                         {placasFields.map((placa, index) => (
                             <div key={`placa-group-${index}`} style={{ marginBottom: '15px' }}>
-                                <input
-                                    type="text"
-                                    placeholder={`Tipo Placa ${index + 1}`}
+                                {/* Replace free-text placa input with a select populated from /inventario/placas but keep prerellenado */}
+                                <select
                                     value={placa}
                                     onChange={(e) => updatePlacaField(index, e.target.value)}
+                                    disabled={sinConsumoPlacas}
                                     style={{
-                                        width: '90%',
-                                        padding: '12px',
+                                        ...uniformInputStyle,
+                                        backgroundColor: sinConsumoPlacas ? '#f5f5f5' : '#fff',
                                         marginBottom: '10px',
-                                        border: '1px solid #ccc',
-                                        borderRadius: '5px',
-                                        fontSize: '16px',
                                     }}
-                                />
+                                >
+                                    {/* If loading show a single option */}
+                                    {placasLoading && <option>Loading...</option>}
+                                    {!placasLoading && placasError && <option>{placasError}</option>}
+                                    {!placasLoading && !placasError && (
+                                        <>
+                                            {/* If there's a prerellenado value that is not in opciones, keep it as first option */}
+                                            {placa && !placasOptions.includes(placa) && (
+                                                <option value={placa}>{placa}</option>
+                                            )}
+                                            {placasOptions.map((opt) => (
+                                                <option key={opt} value={opt}>{opt}</option>
+                                            ))}
+                                        </>
+                                    )}
+                                </select>
                                 <input
                                     type="number"
                                     placeholder={`Cantidad a usar ${index + 1}`}
                                     value={placasUsadasFields[index]}
                                     onChange={(e) => updatePlacaUsadaField(index, e.target.value)}
                                     style={{
-                                        width: '90%',
-                                        padding: '12px',
-                                        border: '1px solid #ccc',
-                                        borderRadius: '5px',
-                                        fontSize: '16px',
+                                        ...uniformInputStyle,
                                     }}
                                 />
                             </div>
@@ -783,12 +818,8 @@ export default function Encol() {
                             value={selectedEncolado}
                             onChange={(e) => setSelectedEncolado(e.target.value as 'Encolado 1' | 'Encolado 2')}
                             style={{
-                                width: '90%',
-                                padding: '12px',
+                                ...uniformInputStyle,
                                 marginBottom: '15px',
-                                border: '1px solid #ccc',
-                                borderRadius: '5px',
-                                fontSize: '16px',
                             }}
                         >
                             <option value="Encolado 1">Encolado 1</option>
