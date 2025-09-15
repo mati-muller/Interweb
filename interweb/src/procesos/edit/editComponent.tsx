@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Modal from 'react-modal';
 import { config } from '../../set/config'; // Corrected import path
+import BackButton from '../../components/BackButton';
 // Set the app element for react-modal
 Modal.setAppElement('#root');
 
@@ -221,6 +222,7 @@ const ReusableProcessComponent: React.FC<ReusableProcessComponentProps> = ({ pro
 
     return (
         <div>
+            <BackButton to="/edicion" />
             {loading ? (
                 <p>Loading...</p>
             ) : error ? (

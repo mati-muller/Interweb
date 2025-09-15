@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { config } from '../set/config'; // Import the config file
+import BackButton from '../components/BackButton';
 
 interface HistorialItem {
   CANTIDAD: number;
@@ -56,6 +57,7 @@ const HistorialTable: React.FC = () => {
 
   return (
     <div style={{ overflowX: 'auto', padding: 20 }}>
+      <BackButton to="/home" />
       <h2>Historial de Procesos</h2>
       <input
         type="text"

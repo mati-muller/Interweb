@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import BackButton from '../components/BackButton';
 
 export default function Homeprocesos() {
     const navigate = useNavigate();
@@ -13,6 +14,15 @@ export default function Homeprocesos() {
 
     return (
         <div style={styles.container}>
+            <BackButton 
+                to="/home" 
+                style={{ 
+                    position: 'absolute', 
+                    top: '20px', 
+                    left: '20px',
+                    zIndex: 10
+                }} 
+            />
             <img
                 src="/interchico.webp"
                 alt="Watermark"

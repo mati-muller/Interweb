@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { config } from '../set/config'; // Import the config file
+import BackButton from '../components/BackButton';
 
 interface InventarioItem {
   cantidad: number;
@@ -70,6 +71,7 @@ const InventarioTable: React.FC = () => {
 
   return (
     <div style={{ padding: 20 }}>
+      <BackButton to="/home" />
       <h2>Inventario</h2>
       {/* Buscador de productos */}
       <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}>

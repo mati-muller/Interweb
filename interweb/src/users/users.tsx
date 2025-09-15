@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { config } from '../set/config'; // Import config
+import BackButton from '../components/BackButton';
 import redTrashIcon from '../assets/red-trash-can-icon.svg'; // Updated path to src/assets/
 import settingsIcon from '../assets/settings-icon.svg'; // Import settings icon
 import editarIcon from '../assets/editar.svg'; // Import edit icon
@@ -141,6 +142,7 @@ export default function UserTable() {
 
     return (
         <div style={{ padding: '20px' }}>
+            <BackButton to="/home" />
             <h2 style={{ marginBottom: '20px', color: '#333' }}>Lista de Usuarios</h2>
             <button
                 style={{
