@@ -48,27 +48,27 @@ const HistorialTable: React.FC = () => {
   }, []);
 
   const filteredData = data.filter(item =>
-    (item.CODPROD?.toLowerCase() || '').includes(search.toLowerCase()) ||
-    (item.DETPROD?.toLowerCase() || '').includes(search.toLowerCase())
+    String(item.NVNUMERO).includes(search)
   );
 
   if (loading) return <div>Cargando...</div>;
   if (error) return <div style={{ color: 'red' }}>{error}</div>;
 
   return (
-    <div style={{ overflowX: 'auto', padding: 20 }}>
+    <div style={{ padding: 20 }}>
       <BackButton to="/home" />
       <h2>Historial de Procesos</h2>
       <input
         type="text"
-        placeholder="Buscar cliente..."
+        placeholder="Buscar por nota de venta..."
         value={search}
         onChange={e => setSearch(e.target.value)}
         style={{ marginBottom: 16, padding: 14, width: 600, fontSize: 20, border: '1px solid #ccc', borderRadius: 6 }}
       />
-      <table style={{ borderCollapse: 'collapse', width: '100%' }}>
-        <thead>
-          <tr style={{ backgroundColor: '#c8a165', color: '#fff' }}>
+      <div style={{ maxHeight: '70vh', overflowY: 'auto', overflowX: 'auto' }}>
+        <table style={{ borderCollapse: 'collapse', width: '100%' }}>
+          <thead style={{ position: 'sticky', top: 0, zIndex: 1 }}>
+            <tr style={{ backgroundColor: '#c8a165', color: '#fff' }}>
             <th style={{ border: '1px solid #ccc', padding: 8 }}>Fecha</th>
             <th style={{ border: '1px solid #ccc', padding: 8 }}>ID</th>
             <th style={{ border: '1px solid #ccc', padding: 8 }}>Nota Venta</th>
@@ -126,7 +126,8 @@ const HistorialTable: React.FC = () => {
             </tr>
           ))}
         </tbody>
-      </table>
+        </table>
+      </div>
     </div>
   );
 };
