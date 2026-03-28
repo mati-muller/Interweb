@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { config } from '../set/config'; // Import the config file
 import BackButton from '../components/BackButton';
+import { useNavigate } from 'react-router-dom';
 
 interface InventarioItem {
   cantidad: number;
@@ -10,6 +11,7 @@ interface InventarioItem {
 const API_URL = `${config.apiUrl}/inventario/total`
 
 const InventarioTable: React.FC = () => {
+  const navigate = useNavigate();
   const [data, setData] = useState<InventarioItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -70,8 +72,7 @@ const InventarioTable: React.FC = () => {
     });
 
   return (
-    <div style={{ padding: 20 }}>
-      <BackButton to="/home" />
+    <div style={{ padding: 20 }}>      <BackButton to="/home" />
       <h2>Inventario</h2>
       {/* Buscador de productos */}
       <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -82,6 +83,26 @@ const InventarioTable: React.FC = () => {
           onChange={e => setSearch(e.target.value)}
           style={{ padding: 8, width: 250, borderRadius: 4, border: '1px solid #ccc' }}
         />
+        {/* Botón para ver Órdenes de Compra */}
+        <button
+          onClick={() => navigate('/inventario/oc')}
+          style={{
+            padding: '8px 16px',
+            borderRadius: 4,
+            border: 'none',
+            background: '#c8a165',
+            color: '#fff',
+            cursor: 'pointer',
+            fontSize: 14,
+            fontWeight: 'bold',
+            transition: 'background 0.2s'
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = '#b89155')}
+          onMouseLeave={(e) => (e.currentTarget.style.background = '#c8a165')}
+          title="Ver órdenes de compra"
+        >
+          Ver Órdenes de Compra
+        </button>
         {/* Botón de menú de filtro */}
         <div style={{ position: 'relative' }}>
           <button

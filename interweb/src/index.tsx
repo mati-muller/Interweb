@@ -33,6 +33,7 @@ import EditCalado from './procesos/edit/editCalado';
 import EditImpresion from './procesos/edit/editImpresion';
 import HistorialTable from './historial/historial';
 import Impresion from './procesos/impresion';
+import OrdenesCompraTable from './inventario/ordenes-compra';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const user = localStorage.getItem('user'); // Ensure this checks for 'user'
@@ -294,12 +295,19 @@ root.render(
               <UserTable />
             </ProtectedRoute>
           }
-        />
-        <Route
+        />        <Route
         path="/inventario"
         element={
           <ProtectedRoute>
             <InventarioTable />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/inventario/oc"
+        element={
+          <ProtectedRoute>
+            <OrdenesCompraTable />
           </ProtectedRoute>
         }
       />
