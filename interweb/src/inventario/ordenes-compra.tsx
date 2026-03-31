@@ -13,6 +13,24 @@ interface OrdenCompraItem {
 
 const API_URL = `${config.apiUrl}/inventario/all`;
 
+// Función para parsear fechas correctamente sin desfase de zonas horarias
+const parseDate = (dateString: string): string => {
+  if (!dateString) return '';
+  
+  // Si ya está en formato dd/mm/yyyy, devolverlo como está
+  if (dateString.includes('/')) {
+    return dateString;
+  }
+  
+  // Si viene en formato yyyy-mm-dd o yyyy-mm-ddT...
+  const datePart = dateString.split('T')[0];
+  const [year, month, day] = datePart.split('-');
+  
+  if (!year || !month || !day) return dateString;
+  
+  return `${day}-${month}-${year}`;
+};
+
 const OrdenesCompraTable: React.FC = () => {
   const [data, setData] = useState<OrdenCompraItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -136,12 +154,10 @@ const OrdenesCompraTable: React.FC = () => {
               <div style={{ marginTop: 4, color: '#666', fontSize: 16 }}>
                 {modalItem.placa}
               </div>
-            </div>
-
-            <div style={{ marginBottom: 16 }}>
+            </div>            <div style={{ marginBottom: 16 }}>
               <strong>Fecha de Compra:</strong>
               <div style={{ marginTop: 4, color: '#666', fontSize: 16 }}>
-                {new Date(modalItem.fecha_compra).toLocaleDateString()}
+                {parseDate(modalItem.fecha_compra)}
               </div>
             </div>
 
@@ -241,9 +257,8 @@ const OrdenesCompraTable: React.FC = () => {
               </td>
               <td style={{ border: '1px solid #ccc', padding: 8 }}>
                 {item.placa}
-              </td>
-              <td style={{ border: '1px solid #ccc', padding: 8 }}>
-                {new Date(item.fecha_compra).toLocaleDateString()}
+              </td>              <td style={{ border: '1px solid #ccc', padding: 8 }}>
+                {parseDate(item.fecha_compra)}
               </td>
               <td style={{ border: '1px solid #ccc', padding: 8, textAlign: 'center' }}>
                 {item.cantidad}
