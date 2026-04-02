@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { config } from '../set/config';
 import BackButton from '../components/BackButton';
+import * as XLSX from 'xlsx';
 
 interface OrdenCompraItem {
+  id: number;
   placa: string;
   fecha_compra: string;
   precio_pp: number;
@@ -13,21 +15,12 @@ interface OrdenCompraItem {
 
 const API_URL = `${config.apiUrl}/inventario/all`;
 
-// Función para parsear fechas correctamente sin desfase de zonas horarias
 const parseDate = (dateString: string): string => {
   if (!dateString) return '';
-  
-  // Si ya está en formato dd/mm/yyyy, devolverlo como está
-  if (dateString.includes('/')) {
-    return dateString;
-  }
-  
-  // Si viene en formato yyyy-mm-dd o yyyy-mm-ddT...
+  if (dateString.includes('/')) return dateString;
   const datePart = dateString.split('T')[0];
   const [year, month, day] = datePart.split('-');
-  
   if (!year || !month || !day) return dateString;
-  
   return `${day}-${month}-${year}`;
 };
 
@@ -36,7 +29,9 @@ const OrdenesCompraTable: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState<string>('');
-  const [modalItem, setModalItem] = useState<OrdenCompraItem | null>(null);
+  const [modalItem, setModalItem] = useState<OrdenCompraItem | null>(null);  const [editingItem, setEditingItem] = useState<OrdenCompraItem | null>(null);
+  const [editValues, setEditValues] = useState({ cantidad: 0, precio_pp: 0, precio_total: 0 });
+  const [saveLoading, setSaveLoading] = useState(false);
 
   useEffect(() => {
     fetch(API_URL)
@@ -54,10 +49,72 @@ const OrdenesCompraTable: React.FC = () => {
       });
   }, []);
 
+  const handleEdit = (item: OrdenCompraItem) => {
+    setEditingItem(item);
+    setEditValues({
+      cantidad: item.cantidad,
+      precio_pp: item.precio_pp,
+      precio_total: item.cantidad * item.precio_pp,
+    });
+  };
+
+  const handlePrecioChange = (value: number) => {
+    setEditValues(prev => ({
+      ...prev,
+      precio_pp: value,
+      precio_total: prev.cantidad * value,
+    }));
+  };
+
+  const handleCantidadChange = (value: number) => {
+    setEditValues(prev => ({
+      ...prev,
+      cantidad: value,
+      precio_total: value * prev.precio_pp,
+    }));
+  };
+
+  const handleSave = async () => {
+    if (!editingItem) return;
+    setSaveLoading(true);
+    try {
+      const response = await fetch(
+        `${config.apiUrl}/inventario/${editingItem.id}`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(editValues),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al actualizar item');
+      }
+
+      const responseData = await response.json();
+      setData(data.map(item =>
+        item.id === editingItem.id
+          ? { 
+              ...item, 
+              cantidad: responseData.cantidad,
+              precio_pp: responseData.precio_pp,
+              precio_total: responseData.precio_total
+            }
+          : item
+      ));
+      setEditingItem(null);
+      alert('Item actualizado correctamente');
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setSaveLoading(false);
+    }
+  };
+
   if (loading) return <div>Cargando...</div>;
   if (error) return <div style={{ color: 'red' }}>{error}</div>;
 
-  // Filtrado por OC
   const filteredData = data.filter(item =>
     item.oc.toLowerCase().includes(search.toLowerCase())
   );
@@ -66,9 +123,7 @@ const OrdenesCompraTable: React.FC = () => {
     <div style={{ padding: 20 }}>
       <BackButton to="/inventario" />
       <h2>Órdenes de Compra</h2>
-      
-      {/* Buscador de OC */}
-      <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
         <input
           type="text"
           placeholder="Buscar por OC..."
@@ -78,10 +133,64 @@ const OrdenesCompraTable: React.FC = () => {
         />
         <span style={{ color: '#666', fontSize: 14 }}>
           Total: {filteredData.length} registros
-        </span>
+        </span>        <button
+          onClick={async () => {
+            try {
+              const response = await fetch(`${config.apiUrl}/inventario/export/csv`);
+              if (!response.ok) throw new Error('Error al descargar CSV');
+              const csvText = await response.text();
+              
+              // Parse CSV manually
+              const lines = csvText.trim().split('\n');
+              const headers = lines[0].split(',').map(h => h.trim());
+              const data: any[] = [];
+              
+              for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',').map(v => v.trim());
+                const row: any = {};
+                headers.forEach((header, idx) => {
+                  row[header] = values[idx];
+                });
+                data.push(row);
+              }
+              
+              // Create workbook and worksheet
+              const worksheet = XLSX.utils.json_to_sheet(data);
+              const workbook = XLSX.utils.book_new();
+              XLSX.utils.book_append_sheet(workbook, worksheet, 'Inventario');
+              
+              // Auto-adjust column widths
+              const colWidths = headers.map(header => ({
+                wch: Math.max(header.length, 15)
+              }));
+              worksheet['!cols'] = colWidths;
+              
+              // Download file
+              XLSX.writeFile(workbook, 'inventario_export.xlsx');
+            } catch (err) {
+              alert('Error al descargar el archivo: ' + (err as Error).message);
+            }
+          }}
+          style={{
+            padding: '8px 16px',
+            borderRadius: 4,
+            border: 'none',
+            background: '#27ae60',
+            color: '#fff',
+            cursor: 'pointer',
+            fontSize: 14,
+            fontWeight: 'bold',
+            transition: 'background 0.2s',
+            marginLeft: 'auto',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = '#229954')}
+          onMouseLeave={(e) => (e.currentTarget.style.background = '#27ae60')}
+          title="Descargar inventario en XLSX"
+        >
+          📥 Exportar Inventario a Excel
+        </button>
       </div>
 
-      {/* Modal para detalles de OC */}
       {modalItem && (
         <div
           style={{
@@ -92,7 +201,6 @@ const OrdenesCompraTable: React.FC = () => {
             alignItems: 'center',
             justifyContent: 'center',
             zIndex: 1000,
-            animation: 'fadeInBg 0.2s'
           }}
           onClick={() => setModalItem(null)}
         >
@@ -105,13 +213,11 @@ const OrdenesCompraTable: React.FC = () => {
               maxWidth: 500,
               boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
               position: 'relative',
-              animation: 'modalPopIn 0.25s',
               maxHeight: '80vh',
               overflowY: 'auto'
             }}
             onClick={e => e.stopPropagation()}
           >
-            {/* Botón de cerrar */}
             <button
               onClick={() => setModalItem(null)}
               style={{
@@ -124,10 +230,7 @@ const OrdenesCompraTable: React.FC = () => {
                 color: '#c8a165',
                 cursor: 'pointer',
                 fontWeight: 'bold',
-                lineHeight: 1
               }}
-              aria-label="Cerrar"
-              title="Cerrar"
             >
               ×
             </button>
@@ -154,7 +257,9 @@ const OrdenesCompraTable: React.FC = () => {
               <div style={{ marginTop: 4, color: '#666', fontSize: 16 }}>
                 {modalItem.placa}
               </div>
-            </div>            <div style={{ marginBottom: 16 }}>
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
               <strong>Fecha de Compra:</strong>
               <div style={{ marginTop: 4, color: '#666', fontSize: 16 }}>
                 {parseDate(modalItem.fecha_compra)}
@@ -192,7 +297,6 @@ const OrdenesCompraTable: React.FC = () => {
                   color: '#fff',
                   cursor: 'pointer',
                   fontSize: 16,
-                  transition: 'background 0.2s'
                 }}
                 onClick={() => setModalItem(null)}
               >
@@ -207,38 +311,148 @@ const OrdenesCompraTable: React.FC = () => {
                   color: '#c8a165',
                   cursor: 'pointer',
                   fontSize: 16,
-                  transition: 'background 0.2s'
                 }}
                 onClick={() => {
                   navigator.clipboard.writeText(modalItem.oc);
                 }}
-                title="Copiar OC"
               >
                 Copiar OC
               </button>
             </div>
-
-            <div style={{ fontSize: 13, color: '#888' }}>
-              Haz clic fuera del modal o en "Cerrar" para salir.
-            </div>
           </div>
-
-          <style>
-            {`
-              @keyframes fadeInBg {
-                from { background: rgba(0,0,0,0); }
-                to { background: rgba(0,0,0,0.35); }
-              }
-              @keyframes modalPopIn {
-                from { transform: scale(0.85); opacity: 0; }
-                to { transform: scale(1); opacity: 1; }
-              }
-            `}
-          </style>
         </div>
       )}
 
-      {/* Tabla de Órdenes de Compra */}
+      {editingItem && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(0,0,0,0.35)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1001,
+          }}
+          onClick={() => setEditingItem(null)}
+        >
+          <div
+            style={{
+              background: '#fff',
+              padding: 32,
+              borderRadius: 16,
+              minWidth: 400,
+              maxWidth: 500,
+              boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
+              position: 'relative',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setEditingItem(null)}
+              style={{
+                position: 'absolute',
+                top: 12,
+                right: 12,
+                background: 'transparent',
+                border: 'none',
+                fontSize: 22,
+                color: '#c8a165',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+              }}
+            >
+              ×
+            </button>
+
+            <h3 style={{ marginTop: 0, color: '#c8a165' }}>
+              Editar: {editingItem.placa}
+            </h3>            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: 'block', marginBottom: 6, fontWeight: 'bold' }}>
+                Cantidad:
+              </label>
+              <input
+                type="number"
+                value={editValues.cantidad}
+                onChange={(e) => handleCantidadChange(parseInt(e.target.value) || 0)}
+                style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #ccc' }}
+              />
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: 'block', marginBottom: 6, fontWeight: 'bold' }}>
+                Precio PP:
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={editValues.precio_pp}
+                onChange={(e) => handlePrecioChange(parseFloat(e.target.value) || 0)}
+                style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #ccc' }}
+              />
+            </div>
+
+            <div style={{ marginBottom: 24 }}>
+              <label style={{ display: 'block', marginBottom: 6, fontWeight: 'bold' }}>
+                Precio Total (Automático):
+              </label>
+              <div style={{
+                width: '100%',
+                padding: 8,
+                borderRadius: 4,
+                border: '1px solid #ccc',
+                background: '#f5f5f5',
+                color: '#666',
+                fontWeight: 'bold',
+                fontSize: 16
+              }}>
+                ${(editValues.cantidad * editValues.precio_pp).toFixed(2)}
+              </div>
+              <small style={{ color: '#999', marginTop: 4, display: 'block' }}>
+                Se calcula automáticamente: cantidad × precio_pp
+              </small>
+            </div>
+
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button
+                onClick={handleSave}
+                disabled={saveLoading}
+                style={{
+                  flex: 1,
+                  padding: '10px',
+                  borderRadius: 6,
+                  border: 'none',
+                  background: '#c8a165',
+                  color: '#fff',
+                  cursor: saveLoading ? 'not-allowed' : 'pointer',
+                  fontSize: 14,
+                  fontWeight: 'bold',
+                  opacity: saveLoading ? 0.6 : 1,
+                }}
+              >
+                {saveLoading ? 'Guardando...' : 'Guardar'}
+              </button>
+              <button
+                onClick={() => setEditingItem(null)}
+                style={{
+                  flex: 1,
+                  padding: '10px',
+                  borderRadius: 6,
+                  border: '1px solid #c8a165',
+                  background: '#fff',
+                  color: '#c8a165',
+                  cursor: 'pointer',
+                  fontSize: 14,
+                  fontWeight: 'bold',
+                }}
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
           <tr style={{ backgroundColor: '#c8a165', color: '#fff' }}>
@@ -247,24 +461,60 @@ const OrdenesCompraTable: React.FC = () => {
             <th style={{ border: '1px solid #ccc', padding: 8 }}>Fecha</th>
             <th style={{ border: '1px solid #ccc', padding: 8 }}>Cantidad</th>
             <th style={{ border: '1px solid #ccc', padding: 8 }}>Precio Total</th>
+            <th style={{ border: '1px solid #ccc', padding: 8 }}>Acciones</th>
           </tr>
         </thead>
         <tbody>
           {filteredData.map((item, idx) => (
-            <tr key={idx} style={{ cursor: 'pointer' }} onClick={() => setModalItem(item)}>
-              <td style={{ border: '1px solid #ccc', padding: 8, fontWeight: 'bold', color: '#c8a165' }}>
+            <tr key={idx}>
+              <td 
+                style={{ border: '1px solid #ccc', padding: 8, fontWeight: 'bold', color: '#c8a165', cursor: 'pointer' }} 
+                onClick={() => setModalItem(item)}
+              >
                 {item.oc}
               </td>
-              <td style={{ border: '1px solid #ccc', padding: 8 }}>
+              <td 
+                style={{ border: '1px solid #ccc', padding: 8, cursor: 'pointer' }} 
+                onClick={() => setModalItem(item)}
+              >
                 {item.placa}
-              </td>              <td style={{ border: '1px solid #ccc', padding: 8 }}>
+              </td>
+              <td 
+                style={{ border: '1px solid #ccc', padding: 8, cursor: 'pointer' }} 
+                onClick={() => setModalItem(item)}
+              >
                 {parseDate(item.fecha_compra)}
               </td>
-              <td style={{ border: '1px solid #ccc', padding: 8, textAlign: 'center' }}>
+              <td 
+                style={{ border: '1px solid #ccc', padding: 8, textAlign: 'center', cursor: 'pointer' }} 
+                onClick={() => setModalItem(item)}
+              >
                 {item.cantidad}
               </td>
-              <td style={{ border: '1px solid #ccc', padding: 8, textAlign: 'right' }}>
+              <td 
+                style={{ border: '1px solid #ccc', padding: 8, textAlign: 'right', cursor: 'pointer' }} 
+                onClick={() => setModalItem(item)}
+              >
                 ${item.precio_total.toFixed(2)}
+              </td>
+              <td style={{ border: '1px solid #ccc', padding: 8, textAlign: 'center' }}>
+                <button
+                  onClick={() => handleEdit(item)}
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: 4,
+                    border: 'none',
+                    background: '#c8a165',
+                    color: '#fff',
+                    cursor: 'pointer',
+                    fontSize: 12,
+                    fontWeight: 'bold',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = '#b89155')}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = '#c8a165')}
+                >
+                  Editar
+                </button>
               </td>
             </tr>
           ))}
