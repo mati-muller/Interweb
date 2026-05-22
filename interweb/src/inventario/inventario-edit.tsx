@@ -14,7 +14,8 @@ interface InventarioRow {
 }
 
 const API_URL = `${config.apiUrl}/inventario/all`;
-const CREATE_URL = `${config.apiUrl}/inventario/add`;
+const CREATE_PLACA_URL = `${config.apiUrl}/inventario/addplaca`;
+const CREATE_PRODUCTO_URL = `${config.apiUrl}/inventario/addproducto`;
 
 type CreateStep = 'choose' | 'PLACA' | 'PRODUCTO';
 
@@ -168,23 +169,24 @@ const InventarioEdit: React.FC = () => {
       const payload =
         createStep === 'PLACA'
           ? {
-              tipo: 'PLACA',
-              largo: createForm.largo,
-              ancho: createForm.ancho,
-              celda: createForm.celda,
+              placa: `PLACA ${createForm.largo.trim()}*${createForm.ancho.trim()} ${createForm.celda.trim()}`,
+              fecha: '',
               cantidad,
               preciopp: precioPP,
+              precio_total: precioPP * cantidad,
               oc: createForm.oc,
             }
           : {
-              tipo: 'PRODUCTO',
               nombre: createForm.nombre,
               cantidad,
               preciopp: precioPP,
               oc: createForm.oc,
             };
 
-      await axios.post(CREATE_URL, payload);
+      await axios.post(
+        createStep === 'PLACA' ? CREATE_PLACA_URL : CREATE_PRODUCTO_URL,
+        payload
+      );
       await refreshData();
       setStatus('Producto agregado correctamente.');
       setCreateSaving(false);
