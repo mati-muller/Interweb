@@ -19,6 +19,33 @@ const CREATE_PRODUCTO_URL = `${config.apiUrl}/inventario/addproducto`;
 
 type CreateStep = 'choose' | 'PLACA' | 'PRODUCTO';
 
+const formatDateForInput = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const parseInventoryDate = (value: string): Date | null => {
+  if (!value) return null;
+
+  const normalized = value.trim();
+  if (!normalized) return null;
+
+  if (normalized.includes('/')) {
+    const [day, month, year] = normalized.split('/');
+    const parsed = new Date(Number(year), Number(month) - 1, Number(day));
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  const datePart = normalized.replace(' ', 'T').split('T')[0];
+  const [year, month, day] = datePart.split('-');
+  if (!year || !month || !day) return null;
+
+  const parsed = new Date(Number(year), Number(month) - 1, Number(day));
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
 const emptyCreateForm = {
   largo: '',
   ancho: '',
@@ -41,6 +68,12 @@ const InventarioEdit: React.FC = () => {
   const [createStep, setCreateStep] = useState<CreateStep>('choose');
   const [createForm, setCreateForm] = useState(emptyCreateForm);
   const [createSaving, setCreateSaving] = useState(false);
+  const [dateFrom, setDateFrom] = useState(() => {
+    const initial = new Date();
+    initial.setDate(initial.getDate() - 13);
+    return formatDateForInput(initial);
+  });
+  const [dateTo, setDateTo] = useState(() => formatDateForInput(new Date()));
 
   useEffect(() => {
     axios
@@ -72,15 +105,32 @@ const InventarioEdit: React.FC = () => {
 
   const filteredData = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
-    if (!normalizedSearch) return data;
+    const fromDate = dateFrom ? parseInventoryDate(dateFrom) : null;
+    const toDate = dateTo ? parseInventoryDate(dateTo) : null;
+
     return data.filter((item) => {
-      return (
+      const matchesSearch =
+        !normalizedSearch ||
         String(item.id).includes(normalizedSearch) ||
         item.placa.toLowerCase().includes(normalizedSearch) ||
-        (item.oc || '').toLowerCase().includes(normalizedSearch)
-      );
+        (item.oc || '').toLowerCase().includes(normalizedSearch);
+
+      if (!matchesSearch) return false;
+
+      if (!fromDate && !toDate) return true;
+
+      const itemDate = parseInventoryDate(item.fecha_compra);
+      if (!itemDate) return false;
+
+      const itemTime = itemDate.getTime();
+      const startTime = fromDate ? new Date(fromDate).setHours(0, 0, 0, 0) : null;
+      const endTime = toDate ? new Date(toDate).setHours(23, 59, 59, 999) : null;
+
+      if (startTime !== null && itemTime < startTime) return false;
+      if (endTime !== null && itemTime > endTime) return false;
+      return true;
     });
-  }, [data, search]);
+  }, [data, search, dateFrom, dateTo]);
 
   const handleSave = async (item: InventarioRow) => {
     const rawValue = pendingQuantities[item.id];
@@ -169,7 +219,7 @@ const InventarioEdit: React.FC = () => {
       const payload =
         createStep === 'PLACA'
           ? {
-              placa: `PLACA ${createForm.largo.trim()}*${createForm.ancho.trim()} ${createForm.celda.trim()}`,
+              placa: `PLACA ${createForm.largo.trim()}*${createForm.ancho.trim()} ${createForm.celda.trim()}`.toUpperCase(),
               fecha: '',
               cantidad,
               preciopp: precioPP,
@@ -253,6 +303,61 @@ const InventarioEdit: React.FC = () => {
         <div style={{ color: '#666' }}>
           Registros: <strong>{filteredData.length}</strong>
         </div>
+      </div>
+
+      <div style={{ marginBottom: 18, display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+        <label style={{ display: 'flex', flexDirection: 'column', gap: 6, color: '#444', fontSize: 14 }}>
+          Desde
+          <input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+            style={{
+              padding: '10px 12px',
+              minWidth: 180,
+              borderRadius: 8,
+              border: '1px solid #d0d0d0',
+              outline: 'none',
+            }}
+          />
+        </label>
+        <label style={{ display: 'flex', flexDirection: 'column', gap: 6, color: '#444', fontSize: 14 }}>
+          Hasta
+          <input
+            type="date"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+            style={{
+              padding: '10px 12px',
+              minWidth: 180,
+              borderRadius: 8,
+              border: '1px solid #d0d0d0',
+              outline: 'none',
+            }}
+          />
+        </label>
+        <button
+          type="button"
+          onClick={() => {
+            const today = new Date();
+            const twoWeeksAgo = new Date();
+            twoWeeksAgo.setDate(today.getDate() - 13);
+            setDateFrom(formatDateForInput(twoWeeksAgo));
+            setDateTo(formatDateForInput(today));
+          }}
+          style={{
+            alignSelf: 'end',
+            padding: '10px 14px',
+            borderRadius: 8,
+            border: '1px solid #c8a165',
+            background: '#fff',
+            color: '#c8a165',
+            cursor: 'pointer',
+            fontWeight: 700,
+          }}
+        >
+          Últimas 2 semanas
+        </button>
       </div>
 
       {status && (
@@ -432,7 +537,7 @@ const InventarioEdit: React.FC = () => {
                   <div style={formGridStyle}>
                     <Field label="Largo" value={createForm.largo} onChange={(value) => setCreateForm((current) => ({ ...current, largo: value }))} />
                     <Field label="Ancho" value={createForm.ancho} onChange={(value) => setCreateForm((current) => ({ ...current, ancho: value }))} />
-                    <Field label="Celda" value={createForm.celda} onChange={(value) => setCreateForm((current) => ({ ...current, celda: value }))} />
+                    <Field label="Tipo de cartón" value={createForm.celda} onChange={(value) => setCreateForm((current) => ({ ...current, celda: value }))} />
                     <Field label="Cantidad" type="number" min={1} value={createForm.cantidad} onChange={(value) => setCreateForm((current) => ({ ...current, cantidad: value }))} />
                     <Field label="Precio" type="number" min={0} step="0.01" value={createForm.precio_pp} onChange={(value) => setCreateForm((current) => ({ ...current, precio_pp: value }))} />
                     <Field label="OC" value={createForm.oc} onChange={(value) => setCreateForm((current) => ({ ...current, oc: value }))} />
@@ -468,7 +573,7 @@ const InventarioEdit: React.FC = () => {
                 </div>
 
                 <div style={{ marginTop: 10, color: '#777', fontSize: 13 }}>
-                  En placa se guardará como `PLACA largo*ancho celda`, normalizada en mayúsculas.
+                  En placa se guardará como `PLACA largo*ancho tipo de cartón`, normalizada en mayúsculas.
                 </div>
               </div>
             )}
