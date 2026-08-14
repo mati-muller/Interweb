@@ -43,6 +43,19 @@ export default function Troz() {
     const [placasLoading, setPlacasLoading] = useState<boolean>(false);
     const [placasError, setPlacasError] = useState<string | null>(null);
 
+    const normalizePlacas = (placas: DataItem['Placas'] | string | null | undefined) => {
+        if (typeof placas === 'string') {
+            try {
+                const parsed = JSON.parse(placas);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch {
+                return [];
+            }
+        }
+
+        return Array.isArray(placas) ? placas : [];
+    };
+
     // Helper functions for updating placa fields
     const updatePlacaField = (index: number, value: string) => {
         setPlacasFields((prev) => {
@@ -84,7 +97,7 @@ export default function Troz() {
                 if (Array.isArray(response.data)) {
                     const transformedData = response.data.map((item) => ({
                         ...item,
-                        Placas: typeof item.Placas === 'string' ? JSON.parse(item.Placas) : item.Placas,
+                        Placas: normalizePlacas(item.Placas),
                     }));
                     setData(transformedData);
                     setOriginalData(transformedData);
@@ -100,10 +113,11 @@ export default function Troz() {
     };
 
     const handleCheckboxClick = (item: DataItem) => {
+        const safePlacas = normalizePlacas(item.Placas);
         setSelectedItem(item);
         setDesiredQuantity(''); // Reset desired quantity
-        setPlacasFields(item.Placas.map((placa) => placa.DesProd)); // Pre-fill all "Tipo Placa" fields with DesProd
-        setPlacasUsadasFields(item.Placas.map(() => '')); // Reset all "Cantidad a usar" fields
+        setPlacasFields(safePlacas.map((placa) => placa.DesProd)); // Pre-fill all "Tipo Placa" fields with DesProd
+        setPlacasUsadasFields(safePlacas.map(() => '')); // Reset all "Cantidad a usar" fields
         setSinConsumoPlacas(false); // Asegura que el checkbox esté desmarcado al abrir el modal
         setShowModal(true);
     };
