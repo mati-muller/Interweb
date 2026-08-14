@@ -42,6 +42,9 @@ export default function Home() {
                     <a href="/inventario" style={{ ...styles.button, textDecoration: 'none' }}>
                         Ir a módulo de inventario
                     </a>
+                    <a href="/alerts" style={{ ...styles.button, textDecoration: 'none' }}>
+                        Ver alertas
+                    </a>
                     <a href="/programa-produccion" style={{ ...styles.button, textDecoration: 'none' }}>
                         Ir a módulo de programa de producción
                     </a>
@@ -59,16 +62,20 @@ export default function Home() {
         }
         if (userRole === 'Admin') {
             return (
-                <a href="/inventario" style={{ ...styles.button, textDecoration: 'none' }}>
-                    Ir a módulo de inventario
-                </a>
+                <>
+                    <a href="/inventario" style={{ ...styles.button, textDecoration: 'none' }}>
+                        Ir a módulo de inventario
+                    </a>
+                </>
             );
         }
         // Operador u otro: solo inventario (puedes ajustar)
         return (
-            <a href="/inventario" style={{ ...styles.button, textDecoration: 'none' }}>
-                Ir a módulo de inventario
-            </a>
+            <>
+                <a href="/inventario" style={{ ...styles.button, textDecoration: 'none' }}>
+                    Ir a módulo de inventario
+                </a>
+            </>
         );
     };
 

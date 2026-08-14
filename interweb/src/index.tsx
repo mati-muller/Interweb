@@ -25,6 +25,7 @@ import EditMult2 from './procesos/edit/editMult2';
 import EditTroq2 from './procesos/edit/editTroq2';
 import EditPegado from './procesos/edit/edirPegado';
 import InventarioTable from './inventario/inventario';
+import InventarioEdit from './inventario/inventario-edit';
 import Calado from './procesos/calado';
 import Plizado from './procesos/plizado';
 import EditPlizado from './procesos/edit/editPlizado';
@@ -34,6 +35,7 @@ import EditImpresion from './procesos/edit/editImpresion';
 import HistorialTable from './historial/historial';
 import Impresion from './procesos/impresion';
 import OrdenesCompraTable from './inventario/ordenes-compra';
+import AlertsPage from './alerts/alerts';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const user = localStorage.getItem('user'); // Ensure this checks for 'user'
@@ -49,23 +51,6 @@ window.addEventListener('storage', (event) => {
     }
   }
 });
-
-function syncLocalStorage() {
-  const user = localStorage.getItem('user');
-  const inventoryData = localStorage.getItem('inventoryData');
-  if (user) {
-    localStorage.setItem('user', user);
-  }
-  if (inventoryData) {
-    localStorage.setItem('inventoryData', inventoryData);
-  }
-}
-
-// Call this function when opening a new tab or window
-function openInNewTab(url: string): void {
-  syncLocalStorage();
-  window.open(url, '_blank');
-}
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -286,6 +271,14 @@ root.render(
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/alerts"
+          element={
+            <ProtectedRoute>
+              <AlertsPage />
+            </ProtectedRoute>
+          }
+        />
         
 
         <Route
@@ -295,22 +288,31 @@ root.render(
               <UserTable />
             </ProtectedRoute>
           }
-        />        <Route
-        path="/inventario"
-        element={
-          <ProtectedRoute>
-            <InventarioTable />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/inventario/oc"
-        element={
-          <ProtectedRoute>
-            <OrdenesCompraTable />
-          </ProtectedRoute>
-        }
-      />
+        />
+        <Route
+          path="/inventario"
+          element={
+            <ProtectedRoute>
+              <InventarioTable />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/inventario/editar"
+          element={
+            <ProtectedRoute>
+              <InventarioEdit />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/inventario/oc"
+          element={
+            <ProtectedRoute>
+              <OrdenesCompraTable />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
       
     </Router>

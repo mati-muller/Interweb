@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { config } from '../set/config'; // Import the config file
 import BackButton from '../components/BackButton';
-import { useNavigate } from 'react-router-dom';
 
 interface InventarioItem {
   cantidad: number;
@@ -72,8 +72,25 @@ const InventarioTable: React.FC = () => {
     });
 
   return (
-    <div style={{ padding: 20 }}>      <BackButton to="/home" />
-      <h2>Inventario</h2>
+    <div style={{ padding: 20 }}>
+      <BackButton to="/home" />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+        <h2 style={{ margin: 0 }}>Inventario</h2>
+        <button
+          onClick={() => navigate('/inventario/editar')}
+          style={{
+            background: '#fff',
+            color: '#c8a165',
+            border: '1px solid #c8a165',
+            borderRadius: 6,
+            padding: '10px 16px',
+            cursor: 'pointer',
+            fontWeight: 600
+          }}
+          >
+            Editar cantidades
+          </button>
+      </div>
       {/* Buscador de productos */}
       <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
         <input
