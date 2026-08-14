@@ -44,6 +44,19 @@ export default function ReusableProcessComponent({
     const [alertModalVisible, setAlertModalVisible] = useState(false);
     const [alertMessage, setAlertMessage] = useState('');
 
+    const normalizePlacas = (placas: DataItem['Placas'] | string | null | undefined) => {
+        if (typeof placas === 'string') {
+            try {
+                const parsed = JSON.parse(placas);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch {
+                return [];
+            }
+        }
+
+        return Array.isArray(placas) ? placas : [];
+    };
+
     const fetchData = () => {
         setLoading(true);
         const apiUrl = `${API_BASE_URL}/procesos/pendientes-${processName}`;
@@ -52,7 +65,7 @@ export default function ReusableProcessComponent({
                 if (Array.isArray(response.data)) {
                     const transformedData = response.data.map((item) => ({
                         ...item,
-                        Placas: typeof item.Placas === 'string' ? JSON.parse(item.Placas) : item.Placas,
+                        Placas: normalizePlacas(item.Placas),
                     }));
                     setData(transformedData);
                     setOriginalData(transformedData);
@@ -68,17 +81,19 @@ export default function ReusableProcessComponent({
     };
 
     const handleCheckboxClick = (item: DataItem) => {
+        const safePlacas = normalizePlacas(item.Placas);
         setSelectedItem(item);
         setDesiredQuantity('');
-        setPlacasFields(item.Placas.map((placa) => placa.DesProd));
-        setPlacasUsadasFields(item.Placas.map(() => ''));
+        setPlacasFields(safePlacas.map((placa) => placa.DesProd));
+        setPlacasUsadasFields(safePlacas.map(() => ''));
         setShowModal(true);
     };
 
     const handleDesiredQuantityChange = (value: string) => {
         setDesiredQuantity(value);
         if (selectedItem) {
-            const updatedPlacasUsadas = selectedItem.Placas.map((placa) =>
+            const safePlacas = normalizePlacas(selectedItem.Placas);
+            const updatedPlacasUsadas = safePlacas.map((placa) =>
                 (parseFloat(value) * placa.CantMat).toFixed(2)
             );
             setPlacasUsadasFields(updatedPlacasUsadas);
@@ -88,8 +103,9 @@ export default function ReusableProcessComponent({
     const handleAddToSelected = () => {
         if (selectedItem && desiredQuantity) {
             const inventoryData = JSON.parse(localStorage.getItem('inventoryData') || '[]');
+            const safePlacas = normalizePlacas(selectedItem.Placas);
             const placasUsadas = placasUsadasFields.map((value, index) =>
-                Number(value || (parseFloat(desiredQuantity) * selectedItem.Placas[index].CantMat).toFixed(2))
+                Number(value || (parseFloat(desiredQuantity) * safePlacas[index].CantMat).toFixed(2))
             );
 
             for (let i = 0; i < placasFields.length; i++) {
