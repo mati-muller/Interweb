@@ -84,8 +84,9 @@ export default function Troz() {
             setPlacasFields(['']);
             setPlacasUsadasFields(['']);
         } else if (selectedItem) {
-            setPlacasFields(selectedItem.Placas.map((placa) => placa.DesProd));
-            setPlacasUsadasFields(selectedItem.Placas.map(() => ''));
+            const safePlacas = normalizePlacas(selectedItem.Placas);
+            setPlacasFields(safePlacas.map((placa) => placa.DesProd));
+            setPlacasUsadasFields(safePlacas.map(() => ''));
         }
     };
 
@@ -142,7 +143,8 @@ export default function Troz() {
 
     useEffect(() => {
         if (selectedItem && desiredQuantity !== '' && !sinConsumoPlacas) {
-            const updatedPlacasUsadas = selectedItem.Placas.map((placa, index) => {
+            const safePlacas = normalizePlacas(selectedItem.Placas);
+            const updatedPlacasUsadas = safePlacas.map((placa, index) => {
                 const currentValue = placasUsadasFields[index];
                 return currentValue !== '' ? Math.ceil(Number(currentValue)).toString() : Math.ceil(parseFloat(desiredQuantity) * placa.CantMat).toString();
             }); // Actualizar dinámicamente con el valor actual y redondear hacia arriba
@@ -153,7 +155,8 @@ export default function Troz() {
     const handleDesiredQuantityChange = (value: string) => {
         setDesiredQuantity(value); // Actualizar el estado de desiredQuantity
         if (selectedItem) {
-            const updatedPlacasUsadas = selectedItem.Placas.map((placa) =>
+            const safePlacas = normalizePlacas(selectedItem.Placas);
+            const updatedPlacasUsadas = safePlacas.map((placa) =>
                 Math.ceil(parseFloat(value) * placa.CantMat).toString()
             ); // Recalcular dinámicamente y redondear hacia arriba
             setPlacasUsadasFields(updatedPlacasUsadas);
@@ -164,8 +167,9 @@ export default function Troz() {
         if (selectedItem && desiredQuantity) {
             if (!sinConsumoPlacas) {
                 const inventoryData = JSON.parse(localStorage.getItem('inventoryData') || '[]');
+                const safePlacas = normalizePlacas(selectedItem.Placas);
                 const placasUsadas = placasUsadasFields.map((value, index) => 
-                    Math.ceil(Number(value || (parseFloat(desiredQuantity) * selectedItem.Placas[index].CantMat)))
+                    Math.ceil(Number(value || (parseFloat(desiredQuantity) * safePlacas[index].CantMat)))
                 );
 
                 for (let i = 0; i < placasFields.length; i++) {
